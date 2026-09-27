@@ -1,8 +1,9 @@
-//! `MetadataStore` trait + concurrent in-memory stub (WS-4).
+//! `MetadataStore` trait + concurrent in-memory store (WS-4).
 
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::metadata::types::SnapshotRecord;
 
 /// Concurrent metadata store contract (`Send + Sync`).
@@ -12,13 +13,13 @@ pub trait MetadataStore: Send + Sync {
     fn list(&self) -> Result<Vec<SnapshotRecord>>;
 }
 
-/// In-memory store intended to use `Arc<RwLock<_>>` (or tokio RwLock).
+/// In-memory store backed by `Arc<RwLock<HashMap>>`.
 ///
-/// Stub methods always return [`Error::NotImplemented`] so concurrent contract
-/// tests fail until WS-4 implements real locking + last-write-wins semantics.
+/// Concurrent `put`/`get`/`list` are lock-safe. Same-key writes use
+/// last-write-wins (HashMap overwrite).
 #[derive(Debug, Default, Clone)]
 pub struct ConcurrentMemoryStore {
-    _inner: Arc<()>,
+    inner: Arc<RwLock<HashMap<String, SnapshotRecord>>>,
 }
 
 impl ConcurrentMemoryStore {
@@ -28,21 +29,19 @@ impl ConcurrentMemoryStore {
 }
 
 impl MetadataStore for ConcurrentMemoryStore {
-    fn get(&self, _id: &str) -> Result<Option<SnapshotRecord>> {
-        Err(Error::NotImplemented(
-            "ConcurrentMemoryStore::get — WS-4",
-        ))
+    fn get(&self, id: &str) -> Result<Option<SnapshotRecord>> {
+        let map = self.inner.read().expect("metadata store lock poisoned");
+        Ok(map.get(id).cloned())
     }
 
-    fn put(&self, _record: SnapshotRecord) -> Result<()> {
-        Err(Error::NotImplemented(
-            "ConcurrentMemoryStore::put — WS-4",
-        ))
+    fn put(&self, record: SnapshotRecord) -> Result<()> {
+        let mut map = self.inner.write().expect("metadata store lock poisoned");
+        map.insert(record.id.clone(), record);
+        Ok(())
     }
 
     fn list(&self) -> Result<Vec<SnapshotRecord>> {
-        Err(Error::NotImplemented(
-            "ConcurrentMemoryStore::list — WS-4",
-        ))
+        let map = self.inner.read().expect("metadata store lock poisoned");
+        Ok(map.values().cloned().collect())
     }
 }
