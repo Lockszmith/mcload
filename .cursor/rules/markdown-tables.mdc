@@ -1,0 +1,35 @@
+---
+description: Align markdown table pipes with space padding
+alwaysApply: true
+---
+
+# Markdown tables — aligned pipes
+
+When writing Markdown tables, pad cell contents with spaces so every `|` in a column lines up vertically. Do this in plans, READMEs, reports, and any agent-authored Markdown.
+
+## Required form
+
+```markdown
+| Field         | Type   | Description        |
+|---------------|--------|--------------------|
+| `description` | string | What the rule does |
+| `globs`       | string | File pattern       |
+| `alwaysApply` | boolean| Applies every turn |
+```
+
+## Forbidden form
+
+```markdown
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | string | What the rule does |
+| `globs` | string | File pattern |
+```
+
+## Rules
+
+- Compute column widths from the widest cell in each column (including header).
+- Pad cells on the right with spaces so separators share a vertical column.
+- Keep the separator row (`---`) the same width as its column.
+- Prefer left-aligned text; use leading spaces only when intentionally centering/right-aligning.
+- Never emit cramped tables where `|` positions jump between rows.
