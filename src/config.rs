@@ -2,7 +2,9 @@
 //!
 //! Merge order (contract): defaults < user YAML < project YAML < CLI.
 
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::error::{Error, Result};
@@ -36,21 +38,44 @@ pub fn defaults() -> Config {
     Config::default()
 }
 
+/// Resolve the default user config directory (XDG / AppData via `directories`).
+pub fn user_config_dir() -> Result<PathBuf> {
+    ProjectDirs::from("com", "mcload", "mcload")
+        .map(|d| d.config_dir().to_path_buf())
+        .ok_or_else(|| Error::Config("could not resolve user config directory".into()))
+}
+
+/// Default user config file path (`config.yaml` under [`user_config_dir`]).
+pub fn user_config_path() -> Result<PathBuf> {
+    Ok(user_config_dir()?.join("config.yaml"))
+}
+
 /// Load config from a YAML file. Missing file → defaults (contract).
-///
-/// Stub always returns [`Error::NotImplemented`] so WS-3 tests fail.
-pub fn load_file(_path: &Path) -> Result<Config> {
-    Err(Error::NotImplemented("config::load_file — WS-3"))
+pub fn load_file(path: &Path) -> Result<Config> {
+    if !path.exists() {
+        return Ok(defaults());
+    }
+    let raw = fs::read_to_string(path)?;
+    let cfg: Config = serde_yaml::from_str(&raw)?;
+    Ok(cfg)
 }
 
 /// Persist config as YAML.
-pub fn save_file(_path: &Path, _cfg: &Config) -> Result<()> {
-    Err(Error::NotImplemented("config::save_file — WS-3"))
+pub fn save_file(path: &Path, cfg: &Config) -> Result<()> {
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)?;
+        }
+    }
+    let raw = serde_yaml::to_string(cfg)?;
+    fs::write(path, raw)?;
+    Ok(())
 }
 
 /// Apply CLI overrides on top of a base config. CLI wins.
-///
-/// Stub returns `base` unchanged so override tests fail.
-pub fn apply_cli_overrides(base: Config, _log_level: Option<&str>) -> Config {
+pub fn apply_cli_overrides(mut base: Config, log_level: Option<&str>) -> Config {
+    if let Some(level) = log_level {
+        base.log_level = level.to_string();
+    }
     base
 }
