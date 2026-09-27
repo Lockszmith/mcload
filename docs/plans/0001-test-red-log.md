@@ -102,3 +102,45 @@ Note: plain `cargo test --no-fail-fast` failed — `cargo` not on PATH.
 | `fingerprint_plugin_stub_returns_placeholder` |
 | `loft_dry_run_returns_ok`                     |
 | `similarity_plugin_stub_returns_score`        |
+
+---
+
+## REVISE Wave B RED baseline — 2026-09-27
+
+Branch: `epic/scaffolding`. Command: `cargo test` (full suite).
+
+| Metric              | Count |
+| ------------------- | ----- |
+| passed              | 24    |
+| failed              | 6     |
+| ignored             | 0     |
+| status              | RED   |
+| `ui_startup` failed | 6     |
+| `ui_startup` passed | 0     |
+
+**Verdict:** RED intentional — FrankenTUI startup contracts not yet wired (R-WS-3). Tray tests removed (no `tray_stub`; `cli_modes` asserts tray rejected). Non-startup suites green.
+
+**Failure root cause:** all six `ui_startup` failures are `Error::NotImplemented` from `ui::{croft,loft}::probe_startup` (R-WS-3). Binary cases use `MCLOAD_STARTUP_PROBE=1` → `probe_startup` (non-blocking CI seam in `main`); dry-run remains a separate seam and is not acceptance.
+
+### Failures (`--test ui_startup` only)
+
+| Test                                                 |
+| ---------------------------------------------------- |
+| `croft_binary_startup_probe_succeeds`                |
+| `croft_non_dry_run_must_not_be_not_implemented_stub` |
+| `croft_probe_startup_reports_frankentui_tty`         |
+| `loft_binary_startup_probe_succeeds`                 |
+| `loft_non_dry_run_must_not_be_not_implemented_stub`  |
+| `loft_probe_startup_reports_frankentui_web`          |
+
+### Non-startup suites (all green)
+
+| Target                       | Passed | Failed |
+| ---------------------------- | ------ | ------ |
+| `--lib`                      | 3      | 0      |
+| `--test cli_modes`           | 6      | 0      |
+| `--test cli_starts`          | 2      | 0      |
+| `--test config_roundtrip`    | 3      | 0      |
+| `--test metadata_concurrent` | 2      | 0      |
+| `--test queues_stubs`        | 3      | 0      |
+| `--test ui_plugin_stubs`     | 5      | 0      |

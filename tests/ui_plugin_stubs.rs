@@ -1,4 +1,4 @@
-//! WS-5 — Croft / Loft entrypoints + plugin stub API surface.
+//! Plugin stub API surface + dry-run seam (seam only — see `ui_startup` for real UI DoD).
 
 use mcload::plugins::stubs::{
     EngagementPlugin, FingerprintPlugin, SimilarityPlugin, StubEngagement,
@@ -7,13 +7,14 @@ use mcload::plugins::stubs::{
 use mcload::ui::{croft, loft};
 
 #[test]
-fn croft_dry_run_returns_ok() {
-    croft::run(true).expect("croft dry-run stub should Ok(())");
+fn croft_dry_run_seam_returns_ok() {
+    // Dry-run is a test seam only; real startup contracts live in ui_startup.rs.
+    croft::run(true).expect("croft dry-run seam should Ok(())");
 }
 
 #[test]
-fn loft_dry_run_returns_ok() {
-    loft::run(true).expect("loft dry-run stub should Ok(())");
+fn loft_dry_run_seam_returns_ok() {
+    loft::run(true).expect("loft dry-run seam should Ok(())");
 }
 
 #[test]
