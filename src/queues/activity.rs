@@ -25,19 +25,43 @@ impl ActivityQueue {
         self.state
     }
 
-    /// Transition to Paused. Stub: no-op / error so tests stay RED.
+    /// Transition Running → Paused.
     pub fn pause(&mut self) -> Result<()> {
-        Err(Error::NotImplemented("ActivityQueue::pause — WS-2b"))
+        match self.state {
+            ActivityState::Running => {
+                self.state = ActivityState::Paused;
+                Ok(())
+            }
+            other => Err(Error::Queue(format!(
+                "ActivityQueue::pause from {other:?}"
+            ))),
+        }
     }
 
-    /// Transition to Running from Paused. Stub stays RED.
+    /// Transition Paused → Running.
     pub fn resume(&mut self) -> Result<()> {
-        Err(Error::NotImplemented("ActivityQueue::resume — WS-2b"))
+        match self.state {
+            ActivityState::Paused => {
+                self.state = ActivityState::Running;
+                Ok(())
+            }
+            other => Err(Error::Queue(format!(
+                "ActivityQueue::resume from {other:?}"
+            ))),
+        }
     }
 
-    /// Transition to Aborted. Stub stays RED.
+    /// Transition to Aborted (from Running or Paused).
     pub fn abort(&mut self) -> Result<()> {
-        Err(Error::NotImplemented("ActivityQueue::abort — WS-2b"))
+        match self.state {
+            ActivityState::Running | ActivityState::Paused => {
+                self.state = ActivityState::Aborted;
+                Ok(())
+            }
+            ActivityState::Aborted => Err(Error::Queue(
+                "ActivityQueue::abort already aborted".into(),
+            )),
+        }
     }
 }
 

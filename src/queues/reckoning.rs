@@ -36,12 +36,22 @@ impl ReckoningQueue {
         });
     }
 
-    /// Promote Fresh → Ready. Stub stays RED.
+    /// Promote Fresh → Ready.
     pub fn promote_to_ready(&mut self, id: &str) -> Result<()> {
-        let _ = id;
-        Err(Error::NotImplemented(
-            "ReckoningQueue::promote_to_ready — WS-2b",
-        ))
+        let item = self
+            .items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .ok_or_else(|| Error::Queue(format!("ReckoningQueue: unknown id {id}")))?;
+        match item.marker {
+            Marker::Fresh => {
+                item.marker = Marker::Ready;
+                Ok(())
+            }
+            Marker::Ready => Err(Error::Queue(format!(
+                "ReckoningQueue: {id} already Ready"
+            ))),
+        }
     }
 }
 

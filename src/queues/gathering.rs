@@ -1,6 +1,6 @@
 //! Gathering queue: marks intake items as Fresh (WS-2b).
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Marker {
@@ -28,12 +28,13 @@ impl GatheringQueue {
         &self.items
     }
 
-    /// Intake metadata and mark it Fresh. Stub stays RED.
+    /// Intake metadata and mark it Fresh.
     pub fn mark_fresh(&mut self, id: impl Into<String>) -> Result<()> {
-        let _ = id;
-        Err(Error::NotImplemented(
-            "GatheringQueue::mark_fresh — WS-2b",
-        ))
+        self.items.push(GatheringItem {
+            id: id.into(),
+            marker: Marker::Fresh,
+        });
+        Ok(())
     }
 }
 
