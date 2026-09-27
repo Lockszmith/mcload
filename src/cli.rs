@@ -58,19 +58,36 @@ where
 }
 
 /// Select launch mode from parsed args.
-///
-/// Stub returns `None` always so WS-2 dispatch tests fail until implemented.
 pub fn select_mode(args: &Args) -> Option<LaunchMode> {
-    let _ = args;
-    None
+    match args.command {
+        Some(Command::Croft { .. }) => Some(LaunchMode::Croft),
+        Some(Command::Loft { .. }) => Some(LaunchMode::Loft),
+        Some(Command::Tray { .. }) => Some(LaunchMode::Tray),
+        None => None,
+    }
+}
+
+/// Whether the selected mode was invoked with `--dry-run`.
+pub fn dry_run(args: &Args) -> bool {
+    match args.command {
+        Some(Command::Croft { dry_run })
+        | Some(Command::Loft { dry_run })
+        | Some(Command::Tray { dry_run }) => dry_run,
+        None => false,
+    }
 }
 
 /// Dispatch a launch mode (stub / dry-run seam).
 ///
-/// Stub always errors so mode-handler tests stay RED until WS-2.
+/// Dry-run returns `Ok` in CLI without requiring full UI/tray (WS-5/WS-6).
+/// Non-dry-run forwards to `ui` / `tray` entrypoints.
 pub fn dispatch(mode: LaunchMode, dry_run: bool) -> crate::error::Result<()> {
-    let _ = (mode, dry_run);
-    Err(crate::error::Error::NotImplemented(
-        "cli::dispatch — WS-2 mode stubs",
-    ))
+    if dry_run {
+        return Ok(());
+    }
+    match mode {
+        LaunchMode::Croft => crate::ui::croft::run(false),
+        LaunchMode::Loft => crate::ui::loft::run(false),
+        LaunchMode::Tray => crate::tray::run(false),
+    }
 }
