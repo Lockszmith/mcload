@@ -1,0 +1,12 @@
+/target/
+**/*.rs.bk
+*.pdb
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.swp
+*~
+/local/
+config.local.yaml
+*.local.yaml
