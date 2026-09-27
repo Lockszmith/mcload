@@ -210,19 +210,19 @@ Mark each step `[ ]` → `[x]` as done. **Commit after each green step.** Never 
 - [ ] Commit: `feat: ui/tray/plugin stubs for croft and loft`
 
 ### Step 7 — Dev-container
-- [ ] **Fail:** N/A (infra); verify Dockerfile builds
-- [ ] **Impl:** `.devcontainer/` with Rust toolchain matching `rust-toolchain.toml`; pre-install `pkg-config` etc. as needed
-- [ ] **Pass:** `cargo test` inside container (document command)
+- [x] **Fail:** N/A (infra); verify Dockerfile builds
+- [x] **Impl:** `.devcontainer/` with Rust toolchain matching `rust-toolchain.toml`; pre-install `pkg-config` etc. as needed
+- [x] **Pass:** `cargo test` inside container (document command)
 - [ ] Commit: `chore: add rust devcontainer`
 
 ### Step 8 — README completeness
-- [ ] Purpose, tagline, usage (CLI modes)
-- [ ] Collapsible `<details>` sections: **Dev Container**, **Tests**, **Multi-platform builds** (Win / Linux x86_64 / macOS aarch64)
+- [x] Purpose, tagline, usage (CLI modes)
+- [x] Collapsible `<details>` sections: **Dev Container**, **Tests**, **Multi-platform builds** (Win / Linux x86_64 / macOS aarch64)
 - [ ] Commit: `docs: expand README with usage and build notes`
 
 ### Step 9 — Cross-compile notes (docs only + smoke if feasible)
-- [ ] Document targets and toolchains in README (no requirement to produce all three artifacts in CI this epic)
-- [ ] Optional smoke: `cargo check` for host target only required
+- [x] Document targets and toolchains in README (no requirement to produce all three artifacts in CI this epic)
+- [x] Optional smoke: `cargo check` for host target only required
 - [ ] Commit if anything beyond README changed
 
 ---
@@ -304,9 +304,9 @@ Note in README: cross-OS binaries often need `cross` (https://github.com/cross-r
 - [ ] Metadata store concurrent-access contract covered by tests
 - [ ] Activity / Gathering / Reckoning stubs with Fresh/Ready (and Pause/Resume/Abort) exist
 - [ ] Plugin stub module present (no real engines)
-- [ ] `.devcontainer` builds and can run `cargo test`
-- [ ] `LICENSE` is MIT; `README.md` has purpose, usage, and collapsible Dev Container / Tests / Cross-build sections
-- [ ] Cross-compile matrix documented for Win, Linux x86_64, macOS aarch64
+- [x] `.devcontainer` builds and can run `cargo test`
+- [x] `LICENSE` is MIT; `README.md` has purpose, usage, and collapsible Dev Container / Tests / Cross-build sections
+- [x] Cross-compile matrix documented for Win, Linux x86_64, macOS aarch64
 - [ ] This plan’s checkboxes updated; commits exist per step; **no push**
 - [ ] `MASTER.md` still lists 0001 as current epic until explicitly closed
 
