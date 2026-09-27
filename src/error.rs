@@ -16,6 +16,12 @@ pub enum Error {
     #[error("queue error: {0}")]
     Queue(String),
 
+    #[error("UI error: {0}")]
+    Ui(String),
+
+    #[error("TTY unavailable: {0}")]
+    TtyUnavailable(String),
+
     #[error(transparent)]
     Io(#[from] std::io::Error),
 

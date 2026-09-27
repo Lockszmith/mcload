@@ -2,6 +2,7 @@
 
 pub mod croft;
 pub mod loft;
+pub(crate) mod model;
 
 /// Report from a non-blocking FrankenTUI startup probe.
 #[derive(Debug, Clone, PartialEq, Eq)]
