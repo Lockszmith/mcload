@@ -1,6 +1,6 @@
 //! Empty plugin hooks for engagement, fingerprint, and similarity (WS-5).
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 pub trait EngagementPlugin: Send + Sync {
     fn name(&self) -> &str;
@@ -17,8 +17,7 @@ pub trait SimilarityPlugin: Send + Sync {
     fn similarity(&self, a: &str, b: &str) -> Result<f64>;
 }
 
-/// Default no-op stubs — methods return NotImplemented so API-surface tests fail
-/// until WS-5 wires real stub Ok(()) / placeholder results.
+/// Default no-op stubs returning Ok / placeholder results for WS-5 scaffolding.
 #[derive(Debug, Default)]
 pub struct StubEngagement;
 
@@ -28,7 +27,7 @@ impl EngagementPlugin for StubEngagement {
     }
 
     fn engage(&self) -> Result<()> {
-        Err(Error::NotImplemented("StubEngagement::engage — WS-5"))
+        Ok(())
     }
 }
 
@@ -41,9 +40,7 @@ impl FingerprintPlugin for StubFingerprint {
     }
 
     fn fingerprint(&self, _path: &str) -> Result<String> {
-        Err(Error::NotImplemented(
-            "StubFingerprint::fingerprint — WS-5",
-        ))
+        Ok("stub-fingerprint-placeholder".to_string())
     }
 }
 
@@ -56,8 +53,6 @@ impl SimilarityPlugin for StubSimilarity {
     }
 
     fn similarity(&self, _a: &str, _b: &str) -> Result<f64> {
-        Err(Error::NotImplemented(
-            "StubSimilarity::similarity — WS-5",
-        ))
+        Ok(0.0)
     }
 }
