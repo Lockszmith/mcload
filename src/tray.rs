@@ -6,8 +6,9 @@ use crate::error::{Error, Result};
 /// Run tray / background idle loop stub.
 ///
 /// With `dry_run`, must return Ok quickly without creating a native tray icon.
-/// Stub stays RED until WS-6.
 pub fn run(dry_run: bool) -> Result<()> {
-    let _ = dry_run;
+    if dry_run {
+        return Ok(());
+    }
     Err(Error::NotImplemented("tray::run — WS-6"))
 }
