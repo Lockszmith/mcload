@@ -9,20 +9,20 @@
 
 ## Current epic
 
-| ID       | Plan                                         | Status                                                                 | Summary                                                                                                                                                                                                 |
-| -------- | -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0001** | [0001-scaffolding.md](./0001-scaffolding.md) | **CURRENT — REVISE** (real FTUI startup; tray CLI removed)             | Scaffolding Waves A–E landed historically; REVISE requires Croft TTY + Loft Web **actually start** (crates.io ftui 0.7.x), drop top-level `tray` mode (tray under Loft only), LF normalize. Schedule: [0001-revise-workload-split.md](./0001-revise-workload-split.md). Awaiting **MC manual Croft/Loft confirm** before merge. **Never push.** |
+| ID       | Plan                                         | Status                                                                     | Summary                                                                                                                                                                                                                              |
+| -------- | -------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **0001** | [0001-scaffolding.md](./0001-scaffolding.md) | **CURRENT — REVISE green**, awaiting MC manual Croft+Loft YES before merge | Waves A–C impl green (`cargo test` **30/30**); Wave D docs alignment. Croft TTY + Loft Web start (ftui 0.7 default-on); tray CLI removed; LF normalized. Awaiting **MC manual Croft/Loft YES** before any merge ask. **Never push.** |
 
 ---
 
 ## Upcoming epics (stubs — not started)
 
-| ID   | Working title                  | Intent                                                                                                      |
-| ---- | ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| 0002 | Profiling & metadata gathering | Walk FS; persist snapshot; Gathering queue workers                                                          |
-| 0003 | Identity & fingerprint plugins | Binary fingerprint + name/size/mime identity; plugin API engagement                                         |
-| 0004 | Similarity & SoT merge         | Largest duplicate/similar chunks; merge folders to exclusive source of truth                                |
-| 0005 | Activity & Reckoning runtime   | Pause/Resume/Abort; fresh→ready reckoning; background/tray UX under Loft (no separate tray CLI)             |
+| ID   | Working title                  | Intent                                                                                                          |
+| ---- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| 0002 | Profiling & metadata gathering | Walk FS; persist snapshot; Gathering queue workers                                                              |
+| 0003 | Identity & fingerprint plugins | Binary fingerprint + name/size/mime identity; plugin API engagement                                             |
+| 0004 | Similarity & SoT merge         | Largest duplicate/similar chunks; merge folders to exclusive source of truth                                    |
+| 0005 | Activity & Reckoning runtime   | Pause/Resume/Abort; fresh→ready reckoning; background/tray UX under Loft (no separate tray CLI)                 |
 | 0006 | Croft / Loft UI polish         | Polish FrankenTUI Croft + Loft surfaces wired to core — **startup moved into 0001 REVISE**; polish remains here |
 
 *(IDs and titles may change; detailed plans land when an epic is opened.)*

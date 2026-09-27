@@ -15,7 +15,7 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ## Summary
 
 | Metric  | Count |
-|---------|-------|
+| ------- | ----- |
 | passed  | 25    |
 | failed  | 0     |
 | ignored | 0     |
@@ -26,7 +26,7 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ## Results by target
 
 | Target                       | Passed | Failed | Ignored |
-|------------------------------|--------|--------|---------|
+| ---------------------------- | ------ | ------ | ------- |
 | `--lib`                      | 3      | 0      | 0       |
 | `--bin` (main)               | 0      | 0      | 0       |
 | `--test cli_modes`           | 6      | 0      | 0       |
@@ -43,7 +43,7 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ### `--lib`
 
 | Test                                                               |
-|--------------------------------------------------------------------|
+| ------------------------------------------------------------------ |
 | `queues::activity::tests::activity_pause_resume_abort_transitions` |
 | `queues::gathering::tests::gathering_marks_items_fresh`            |
 | `queues::reckoning::tests::reckoning_promotes_fresh_to_ready`      |
@@ -51,7 +51,7 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ### `--test cli_modes`
 
 | Test                                      |
-|-------------------------------------------|
+| ----------------------------------------- |
 | `croft_dry_run_binary_exits_zero`         |
 | `dispatch_dry_run_succeeds_for_each_mode` |
 | `help_lists_croft_loft_tray_modes`        |
@@ -62,14 +62,14 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ### `--test cli_starts`
 
 | Test                                        |
-|---------------------------------------------|
+| ------------------------------------------- |
 | `help_exits_zero`                           |
 | `version_exits_zero_and_prints_pkg_version` |
 
 ### `--test config_roundtrip`
 
 | Test                          |
-|-------------------------------|
+| ----------------------------- |
 | `cli_override_wins_over_file` |
 | `missing_file_loads_defaults` |
 | `save_and_reload_roundtrip`   |
@@ -77,14 +77,14 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ### `--test metadata_concurrent`
 
 | Test                                             |
-|--------------------------------------------------|
+| ------------------------------------------------ |
 | `concurrent_put_get_without_panic_or_corruption` |
 | `last_write_wins_for_same_key`                   |
 
 ### `--test queues_stubs`
 
 | Test                          |
-|-------------------------------|
+| ----------------------------- |
 | `activity_pause_resume_abort` |
 | `gathering_marks_fresh`       |
 | `reckoning_fresh_to_ready`    |
@@ -92,13 +92,13 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 ### `--test tray_stub`
 
 | Test                      |
-|---------------------------|
+| ------------------------- |
 | `tray_dry_run_returns_ok` |
 
 ### `--test ui_plugin_stubs`
 
 | Test                                          |
-|-----------------------------------------------|
+| --------------------------------------------- |
 | `croft_dry_run_returns_ok`                    |
 | `engagement_plugin_stub_engage_ok`            |
 | `fingerprint_plugin_stub_returns_placeholder` |
@@ -107,9 +107,9 @@ Toolchain: `stable-x86_64-pc-windows-gnu` + WinLibs MinGW on PATH.
 
 ## Failures
 
-| Test | Reason |
-|------|--------|
-| _(none)_ | — |
+| Test     | Reason |
+| -------- | ------ |
+| _(none)_ | —      |
 
 ## Smoke
 
@@ -120,9 +120,78 @@ cargo +stable-x86_64-pc-windows-gnu run -- croft --dry-run
 ```
 
 | Command           | Exit | Notes                          |
-|-------------------|------|--------------------------------|
+| ----------------- | ---- | ------------------------------ |
 | `--version`       | 0    | prints `mcload 0.1.0`          |
 | `--help`          | 0    | lists croft / loft / tray      |
 | `croft --dry-run` | 0    | dry-run completes successfully |
 
 **Smoke verdict:** GREEN
+
+---
+
+# 0001 — REVISE test GREEN log (2026-09-27)
+
+Captured after Wave C (FrankenTUI startup); suite expected GREEN. Historical 25/25 section above remains the scaffolding-era baseline.
+
+## Command
+
+```bash
+cargo test --no-fail-fast
+```
+
+Toolchain: `stable` (see `rust-toolchain.toml`); default features (`frankentui` on).
+
+## Summary
+
+| Metric  | Count |
+| ------- | ----- |
+| passed  | 30    |
+| failed  | 0     |
+| ignored | 0     |
+| status  | GREEN |
+
+**Verdict:** REVISE GREEN (0 failures) after Wave C
+
+## Results by target
+
+| Target                       | Passed | Failed | Ignored |
+| ---------------------------- | ------ | ------ | ------- |
+| `--lib`                      | 3      | 0      | 0       |
+| `--bin` (main)               | 0      | 0      | 0       |
+| `--test cli_modes`           | 6      | 0      | 0       |
+| `--test cli_starts`          | 2      | 0      | 0       |
+| `--test config_roundtrip`    | 3      | 0      | 0       |
+| `--test metadata_concurrent` | 2      | 0      | 0       |
+| `--test queues_stubs`        | 3      | 0      | 0       |
+| `--test ui_plugin_stubs`     | 5      | 0      | 0       |
+| `--test ui_startup`          | 6      | 0      | 0       |
+| doc-tests                    | 0      | 0      | 0       |
+
+## Notes vs scaffolding GREEN
+
+| Change              | Detail                                                          |
+| ------------------- | --------------------------------------------------------------- |
+| `tray_stub` removed | Top-level tray CLI gone (Wave B)                                |
+| `ui_startup` added  | Real Croft TTY / Loft Web startup contracts (was RED in Wave B) |
+| Probe seam          | `MCLOAD_STARTUP_PROBE=1` → `frankentui-tty` / `frankentui-web`  |
+| Dry-run             | Remains a test seam; not the merge bar                          |
+
+## Failures
+
+| Test     | Reason |
+| -------- | ------ |
+| _(none)_ | —      |
+
+## Smoke (probe)
+
+```bash
+MCLOAD_STARTUP_PROBE=1 cargo run -- croft
+MCLOAD_STARTUP_PROBE=1 cargo run -- loft
+```
+
+| Command                          | Exit | Notes                                    |
+| -------------------------------- | ---- | ---------------------------------------- |
+| `MCLOAD_STARTUP_PROBE=1 … croft` | 0    | `frankentui-tty ready=true`              |
+| `MCLOAD_STARTUP_PROBE=1 … loft`  | 0    | `frankentui-web ready=true` + listen URL |
+
+**Smoke verdict:** REVISE GREEN (probe). Interactive Croft/Loft confirm remains the MC merge gate.

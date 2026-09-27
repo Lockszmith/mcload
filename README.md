@@ -2,7 +2,7 @@
 
 > There can be only one!
 
-**McLoad** is a single-binary Rust tool for filesystem load / metadata workflows with one Source of Truth in mind. It exposes three launch modes — **Croft** (TTY UI), **Loft** (Web UI), and **tray/background** — plus YAML config, a concurrent metadata store API, and queue stubs (Activity / Gathering / Reckoning). Scaffolding ships UI and tray as stubs; real FrankenTUI and tray backends are optional features.
+**McLoad** is a single-binary Rust tool for filesystem load / metadata workflows with one Source of Truth in mind. It exposes two launch modes — **Croft** (FrankenTUI TTY UI) and **Loft** (FrankenTUI Web UI) — plus YAML config, a concurrent metadata store API, and queue stubs (Activity / Gathering / Reckoning). Tray (when the OS supports it) is an optional capability **under Loft**, not a separate CLI mode.
 
 Licensed under the [MIT License](LICENSE).
 
@@ -16,32 +16,65 @@ cargo run -- --help
 cargo run -- --version
 ```
 
-| Mode / flag           | Purpose                                              |
-| --------------------- | ---------------------------------------------------- |
-| `mcload --help`       | Print CLI help and exit                              |
-| `mcload --version`    | Print version (`CARGO_PKG_VERSION`) and exit         |
-| `mcload croft`        | Croft — FrankenTUI TTY UI (stub by default)          |
-| `mcload loft`         | Loft — FrankenTUI Web/WASM UI (stub by default)      |
-| `mcload tray`         | Tray / background mode (stub; optional `tray` feat.) |
-| `… --dry-run`         | Mode seam: exit 0 without opening UI/tray            |
-| `--config <path>`     | Override config YAML path (global)                   |
-| `--project <dir>`     | Per-project config directory (global)                |
-| `--log-level <level>` | Override log level from CLI (global)                 |
+| Mode / flag           | Purpose                                                               |
+| --------------------- | --------------------------------------------------------------------- |
+| `mcload --help`       | Print CLI help and exit                                               |
+| `mcload --version`    | Print version (`CARGO_PKG_VERSION`) and exit                          |
+| `mcload croft`        | Croft — FrankenTUI TTY UI (needs a real TTY; press `q` to quit)       |
+| `mcload loft`         | Loft — FrankenTUI Web UI (prints a local `http://127.0.0.1:PORT` URL) |
+| `… --dry-run`         | Test seam only: exit 0 without opening UI (not merge / UI acceptance) |
+| `--config <path>`     | Override config YAML path (global)                                    |
+| `--project <dir>`     | Per-project config directory (global)                                 |
+| `--log-level <level>` | Override log level from CLI (global)                                  |
 
-Examples:
+**Croft** requires an interactive TTY. Without one it exits with a clear `TtyUnavailable` error (re-run in a real terminal, or use `--dry-run` / `MCLOAD_STARTUP_PROBE=1`). **Loft** binds a local HTTP listener and prints the URL to stderr; open it in a browser and press Ctrl+C to stop.
+
+### Paste-ready startup (Croft + Loft)
+
+```bash
+# From repo root (Linux / WSL / devcontainer)
+cargo build
+cargo run -- croft          # needs interactive TTY; press q to quit
+cargo run -- loft           # note printed URL; open in browser; Ctrl+C to stop
+
+# Non-blocking probes (CI seam — not the merge bar alone)
+MCLOAD_STARTUP_PROBE=1 cargo run -- croft
+MCLOAD_STARTUP_PROBE=1 cargo run -- loft
+```
+
+PowerShell (Windows host) equivalents:
+
+```powershell
+cargo build
+cargo run -- croft
+cargo run -- loft
+$env:MCLOAD_STARTUP_PROBE = "1"; cargo run -- croft
+$env:MCLOAD_STARTUP_PROBE = "1"; cargo run -- loft
+```
+
+`--dry-run` remains available as a non-UI test seam:
 
 ```bash
 cargo run -- croft --dry-run
 cargo run -- loft --dry-run
-cargo run -- tray --dry-run
 ```
 
-Optional Cargo features:
+### Optional Cargo features
 
-| Feature      | Default | Notes                                           |
-| ------------ | ------- | ----------------------------------------------- |
-| `tray`       | off     | Native tray deps when implementing the stub     |
-| `frankentui` | off     | Real FrankenTUI imports when deps are available |
+| Feature      | Default | Notes                                                            |
+| ------------ | ------- | ---------------------------------------------------------------- |
+| `frankentui` | **on**  | Default feature; Croft/Loft start FrankenTUI without extra flags |
+
+There is **no** top-level `tray` CLI mode or standalone `tray` Cargo feature. Tray support (if added later) lives under Loft when the OS allows it.
+
+### Line endings (LF)
+
+The repo enforces LF via [`.gitattributes`](.gitattributes) (`* text=auto eol=lf`). For local clones, recommended (not committed):
+
+```bash
+git config --local core.autocrlf false
+git config --local core.eol lf
+```
 
 <details>
 <summary>Dev Container</summary>
@@ -97,13 +130,13 @@ cargo test
 cargo test --test cli_starts -- --nocapture
 cargo test --test config_roundtrip -- --nocapture
 cargo test --test metadata_concurrent -- --nocapture
+cargo test --test ui_startup -- --nocapture
 
 # Smoke the binary
 cargo run -- --help
 cargo run -- --version
-cargo run -- croft --dry-run
-cargo run -- loft --dry-run
-cargo run -- tray --dry-run
+MCLOAD_STARTUP_PROBE=1 cargo run -- croft
+MCLOAD_STARTUP_PROBE=1 cargo run -- loft
 ```
 
 One-shot from the host without an interactive shell:
@@ -111,6 +144,8 @@ One-shot from the host without an interactive shell:
 ```powershell
 devcontainer exec --workspace-folder . cargo test
 ```
+
+**Note:** Interactive `cargo run -- croft` needs a real TTY. In headless `devcontainer exec` without a TTY, expect a clear `TtyUnavailable` error; use the probe env or an IDE terminal attached to a TTY.
 
 </details>
 
