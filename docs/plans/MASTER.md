@@ -9,21 +9,21 @@
 
 ## Current epic
 
-| ID       | Plan                                         | Status                                                              | Summary                                                                                                                                                                                                              |
-| -------- | -------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0001** | [0001-scaffolding.md](./0001-scaffolding.md) | **CURRENT — DONE** (awaiting MC merge approval → `main`)            | Initial scaffolding: Cargo binary, CLI modes, FrankenTUI hooks, tray stub, YAML config, concurrent metadata API, queue stubs, dev-container, README/LICENSE, minimal tests, cross-compile notes — verified GREEN 25/25 |
+| ID       | Plan                                         | Status                                                                 | Summary                                                                                                                                                                                                 |
+| -------- | -------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0001** | [0001-scaffolding.md](./0001-scaffolding.md) | **CURRENT — REVISE** (real FTUI startup; tray CLI removed)             | Scaffolding Waves A–E landed historically; REVISE requires Croft TTY + Loft Web **actually start** (crates.io ftui 0.7.x), drop top-level `tray` mode (tray under Loft only), LF normalize. Schedule: [0001-revise-workload-split.md](./0001-revise-workload-split.md). Awaiting **MC manual Croft/Loft confirm** before merge. **Never push.** |
 
 ---
 
 ## Upcoming epics (stubs — not started)
 
-| ID   | Working title                  | Intent                                                                       |
-| ---- | ------------------------------ | ---------------------------------------------------------------------------- |
-| 0002 | Profiling & metadata gathering | Walk FS; persist snapshot; Gathering queue workers                           |
-| 0003 | Identity & fingerprint plugins | Binary fingerprint + name/size/mime identity; plugin API engagement          |
-| 0004 | Similarity & SoT merge         | Largest duplicate/similar chunks; merge folders to exclusive source of truth |
-| 0005 | Activity & Reckoning runtime   | Pause/Resume/Abort; fresh→ready reckoning; background/tray UX                |
-| 0006 | Croft / Loft UI polish         | Real FrankenTUI Croft + Loft surfaces wired to core                          |
+| ID   | Working title                  | Intent                                                                                                      |
+| ---- | ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| 0002 | Profiling & metadata gathering | Walk FS; persist snapshot; Gathering queue workers                                                          |
+| 0003 | Identity & fingerprint plugins | Binary fingerprint + name/size/mime identity; plugin API engagement                                         |
+| 0004 | Similarity & SoT merge         | Largest duplicate/similar chunks; merge folders to exclusive source of truth                                |
+| 0005 | Activity & Reckoning runtime   | Pause/Resume/Abort; fresh→ready reckoning; background/tray UX under Loft (no separate tray CLI)             |
+| 0006 | Croft / Loft UI polish         | Polish FrankenTUI Croft + Loft surfaces wired to core — **startup moved into 0001 REVISE**; polish remains here |
 
 *(IDs and titles may change; detailed plans land when an epic is opened.)*
 
@@ -37,7 +37,8 @@ At creation of epic 0001 the tree was essentially empty: git repo with **no comm
 
 ## How to use these plans
 
-1. Open the **current epic** markdown; execute TDD steps in order.
+1. Open the **current epic** markdown; execute TDD steps in order (for 0001 REVISE use [0001-revise-workload-split.md](./0001-revise-workload-split.md)).
 2. Check off items and keep architecture/decisions in sync with the code.
-3. When an epic’s Definition of Done is met, mark it **DONE** here and promote the next epic to **CURRENT**.
+3. When an epic’s Definition of Done is met **and** MC has given any required manual confirm, mark it **DONE** here and promote the next epic to **CURRENT**.
 4. Do not push remotes unless a human explicitly requests it outside these plans.
+5. Do **not** ask to merge 0001 until MC manually confirms Croft and Loft start.

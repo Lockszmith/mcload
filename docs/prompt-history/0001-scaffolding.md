@@ -2,10 +2,16 @@
 
 > **Audience:** future agents continuing McLoad work  
 > **Epic:** `0001` scaffolding (`epic/scaffolding`)  
-> **Plans:** [0001-scaffolding.md](../plans/0001-scaffolding.md), [0001-workload-split.md](../plans/0001-workload-split.md), [MASTER.md](../plans/MASTER.md)  
+> **Plans:** [0001-scaffolding.md](../plans/0001-scaffolding.md), [0001-workload-split.md](../plans/0001-workload-split.md), [0001-revise-workload-split.md](../plans/0001-revise-workload-split.md), [MASTER.md](../plans/MASTER.md)  
 > **Hard rule:** **never push** (no `git push`, no force-push, no remote publish unless a human explicitly overrides outside plan process)
 
 This note preserves the agentic process, wave schedule, TDD loop, commits, and locked decisions for the scaffolding epic.
+
+---
+
+## REVISE (forthcoming — full history in R-WS-5)
+
+MC reopened epic 0001: real FrankenTUI Croft/Loft startup; drop top-level `tray` CLI (tray under Loft only); LF normalize. Schedule: [0001-revise-workload-split.md](../plans/0001-revise-workload-split.md). A full REVISE section (commits, decisions, smoke) will be appended in **R-WS-5** after Waves A–D land. Do not treat historical dry-run stubs or `mcload tray` as merge acceptance.
 
 ---
 
@@ -119,15 +125,15 @@ Full SHAs (abbreviated above to 7 chars):
 
 ## Decisions locked for scaffolding
 
-| Decision                         | Choice                                                                 | Why / where                                                                 |
-| -------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| CLI framework                    | **clap** (derive)                                                      | Help/version + subcommands; industry default (`src/cli.rs`)                 |
-| Metadata concurrency             | **In-memory `Arc<RwLock<…>>`** (`ConcurrentMemoryStore`)               | Concurrent API without sled/sqlite in epic 0001 (`src/metadata/store.rs`)   |
-| Dry-run seam                     | **`--dry-run` short-circuits in `cli::dispatch`**                      | Returns `Ok(())` before UI/tray; tests smoke without opening backends       |
-| FrankenTUI                       | **Deferred stubs** (`ui/croft.rs`, `ui/loft.rs`); optional `frankentui` | Compile/test without full ftui stack; real wiring is later epic             |
-| Tray                             | **Dry-run stub** (`tray::run`); feature-gated real path later          | Mode succeeds under dry-run / stub without OS tray backend                  |
-| Crate layout                     | Single crate `lib` + `bin`                                             | Integration tests import modules without always spawning                    |
-| Remote ops                       | **Never push**                                                         | Process constraint for all WS agents and PM                                 |
+| Decision             | Choice                                                                  | Why / where                                                               |
+| -------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| CLI framework        | **clap** (derive)                                                       | Help/version + subcommands; industry default (`src/cli.rs`)               |
+| Metadata concurrency | **In-memory `Arc<RwLock<…>>`** (`ConcurrentMemoryStore`)                | Concurrent API without sled/sqlite in epic 0001 (`src/metadata/store.rs`) |
+| Dry-run seam         | **`--dry-run` short-circuits in `cli::dispatch`**                       | Returns `Ok(())` before UI/tray; tests smoke without opening backends     |
+| FrankenTUI           | **Deferred stubs** (`ui/croft.rs`, `ui/loft.rs`); optional `frankentui` | Compile/test without full ftui stack; real wiring is later epic           |
+| Tray                 | **Dry-run stub** (`tray::run`); feature-gated real path later           | Mode succeeds under dry-run / stub without OS tray backend                |
+| Crate layout         | Single crate `lib` + `bin`                                              | Integration tests import modules without always spawning                  |
+| Remote ops           | **Never push**                                                          | Process constraint for all WS agents and PM                               |
 
 ### Dry-run short-circuit (explicit)
 
@@ -137,13 +143,13 @@ Full SHAs (abbreviated above to 7 chars):
 
 ## Pointers for the next agent
 
-| Path                                         | Use                                              |
-| -------------------------------------------- | ------------------------------------------------ |
-| `docs/plans/MASTER.md`                       | Epic status / upcoming IDs                       |
-| `docs/plans/0001-scaffolding.md`             | Goal, DoD, architecture, open questions          |
-| `docs/plans/0001-workload-split.md`          | Corrected WS ownership and waves                 |
-| `docs/plans/0001-test-red-log.md`            | RED baseline (25 fail)                           |
-| `docs/plans/0001-test-green-log.md`          | GREEN after Waves A–E (25 pass)                  |
-| `docs/prompt-history/0001-scaffolding.md`    | This process record                              |
+| Path                                      | Use                                     |
+| ----------------------------------------- | --------------------------------------- |
+| `docs/plans/MASTER.md`                    | Epic status / upcoming IDs              |
+| `docs/plans/0001-scaffolding.md`          | Goal, DoD, architecture, open questions |
+| `docs/plans/0001-workload-split.md`       | Corrected WS ownership and waves        |
+| `docs/plans/0001-test-red-log.md`         | RED baseline (25 fail)                  |
+| `docs/plans/0001-test-green-log.md`       | GREEN after Waves A–E (25 pass)         |
+| `docs/prompt-history/0001-scaffolding.md` | This process record                     |
 
 Do not re-litigate clap vs alternatives, RwLock vs DB, or dry-run vs env-only seams for scaffolding follow-ups unless a new epic plan explicitly revisits them. **Never push.**

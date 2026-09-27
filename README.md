@@ -17,7 +17,7 @@ cargo run -- --version
 ```
 
 | Mode / flag           | Purpose                                              |
-|-----------------------|------------------------------------------------------|
+| --------------------- | ---------------------------------------------------- |
 | `mcload --help`       | Print CLI help and exit                              |
 | `mcload --version`    | Print version (`CARGO_PKG_VERSION`) and exit         |
 | `mcload croft`        | Croft — FrankenTUI TTY UI (stub by default)          |
@@ -39,7 +39,7 @@ cargo run -- tray --dry-run
 Optional Cargo features:
 
 | Feature      | Default | Notes                                           |
-|--------------|---------|-------------------------------------------------|
+| ------------ | ------- | ----------------------------------------------- |
 | `tray`       | off     | Native tray deps when implementing the stub     |
 | `frankentui` | off     | Real FrankenTUI imports when deps are available |
 
@@ -120,7 +120,7 @@ devcontainer exec --workspace-folder . cargo test
 Scaffolding documents the target matrix; producing every artifact usually needs a native host or [cross](https://github.com/cross-rs/cross). Host smoke: `cargo check` / `cargo build --release` on the machine you have.
 
 | Platform            | Rust target                | Typical notes                                                                 |
-|---------------------|----------------------------|-------------------------------------------------------------------------------|
+| ------------------- | -------------------------- | ----------------------------------------------------------------------------- |
 | Windows             | `x86_64-pc-windows-msvc`   | Native MSVC toolchain on Windows                                              |
 | Linux x86-64        | `x86_64-unknown-linux-gnu` | Native Linux, WSL, this Dev Container, or `cross` from another OS             |
 | macOS Apple Silicon | `aarch64-apple-darwin`     | Native on Apple Silicon; cross from Linux/Windows needs osxcross / special CI |

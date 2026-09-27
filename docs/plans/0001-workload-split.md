@@ -1,12 +1,16 @@
 # Epic 0001 — Workload Split (Verified)
 
+> **Historical note:** This file records the **original** scaffolding Waves A–E.  
+> **REVISE scheduling** (LF, tray CLI removal, real FrankenTUI startup) is owned by  
+> **[0001-revise-workload-split.md](./0001-revise-workload-split.md)** — do not rewrite the history below.
+
 > **Verdict:** NEEDS_CHANGES (corrected split below; do not use the raw splitter draft as-is)  
 > **Epic branch:** `epic/scaffolding`  
 > **Source plans:** [0001-scaffolding.md](./0001-scaffolding.md), [MASTER.md](./MASTER.md)  
 > **Verifier date:** 2026-09-27  
 > **Out of scope (unchanged):** real dedup, full queue workers, push, FrankenTUI polish / production Loft
 
-This file is the **approved corrected** workload record for PM scheduling. The splitter draft was close but missed plugins, left queues ambiguous, and allowed an invalid parallel on `cli.rs`.
+This file is the **approved corrected** workload record for **original** scaffolding PM scheduling. The splitter draft was close but missed plugins, left queues ambiguous, and allowed an invalid parallel on `cli.rs`.
 
 ---
 
