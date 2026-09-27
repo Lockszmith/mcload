@@ -9,9 +9,9 @@
 
 ## Current epic
 
-| ID       | Plan                                         | Status                | Summary                                                                                                                                                                                         |
-| -------- | -------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0001** | [0001-scaffolding.md](./0001-scaffolding.md) | **CURRENT — PLANNED** | Initial scaffolding: Cargo binary, CLI modes, FrankenTUI hooks, tray stub, YAML config, concurrent metadata API, queue stubs, dev-container, README/LICENSE, minimal tests, cross-compile notes |
+| ID       | Plan                                         | Status                                       | Summary                                                                                                                                                                                                              |
+| -------- | -------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0001** | [0001-scaffolding.md](./0001-scaffolding.md) | **CURRENT — DONE** (awaiting explicit close) | Initial scaffolding: Cargo binary, CLI modes, FrankenTUI hooks, tray stub, YAML config, concurrent metadata API, queue stubs, dev-container, README/LICENSE, minimal tests, cross-compile notes — verified GREEN 25/25 |
 
 ---
 
