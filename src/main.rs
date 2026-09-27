@@ -1,7 +1,6 @@
 //! Binary entry — parse CLI and dispatch launch mode.
 //!
-//! WS-1: clap handles `--help` / `--version` (exit 0).
-//! WS-2: mode dispatch (`croft` / `loft` / `tray`) with `--dry-run` seam.
+//! Modes: `croft` (TTY) / `loft` (Web). `--dry-run` is a test seam only.
 
 use clap::Parser;
 use mcload::cli::{self, Args};

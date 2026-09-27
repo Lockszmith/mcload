@@ -1,4 +1,4 @@
-//! CLI args / subcommands / overrides (WS-2 owns modes; WS-3 owns config flags).
+//! CLI args / subcommands / overrides.
 
 use clap::{Parser, Subcommand};
 
@@ -9,15 +9,15 @@ pub struct Args {
     #[command(subcommand)]
     pub command: Option<Command>,
 
-    /// Path to user/project config YAML (WS-3).
+    /// Path to user/project config YAML.
     #[arg(long, global = true)]
     pub config: Option<std::path::PathBuf>,
 
-    /// Project directory for per-project config (WS-3).
+    /// Project directory for per-project config.
     #[arg(long, global = true)]
     pub project: Option<std::path::PathBuf>,
 
-    /// Override log level from CLI (WS-3); wins over YAML.
+    /// Override log level from CLI; wins over YAML.
     #[arg(long, global = true)]
     pub log_level: Option<String>,
 }
@@ -29,13 +29,8 @@ pub enum Command {
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },
-    /// Loft — FrankenTUI Web/WASM UI
+    /// Loft — FrankenTUI Web UI
     Loft {
-        #[arg(long, default_value_t = false)]
-        dry_run: bool,
-    },
-    /// Tray / background mode
-    Tray {
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },
@@ -45,7 +40,6 @@ pub enum Command {
 pub enum LaunchMode {
     Croft,
     Loft,
-    Tray,
 }
 
 /// Parse argv-style args (without binary name).
@@ -62,7 +56,6 @@ pub fn select_mode(args: &Args) -> Option<LaunchMode> {
     match args.command {
         Some(Command::Croft { .. }) => Some(LaunchMode::Croft),
         Some(Command::Loft { .. }) => Some(LaunchMode::Loft),
-        Some(Command::Tray { .. }) => Some(LaunchMode::Tray),
         None => None,
     }
 }
@@ -70,17 +63,15 @@ pub fn select_mode(args: &Args) -> Option<LaunchMode> {
 /// Whether the selected mode was invoked with `--dry-run`.
 pub fn dry_run(args: &Args) -> bool {
     match args.command {
-        Some(Command::Croft { dry_run })
-        | Some(Command::Loft { dry_run })
-        | Some(Command::Tray { dry_run }) => dry_run,
+        Some(Command::Croft { dry_run }) | Some(Command::Loft { dry_run }) => dry_run,
         None => false,
     }
 }
 
-/// Dispatch a launch mode (stub / dry-run seam).
+/// Dispatch a launch mode.
 ///
-/// Dry-run returns `Ok` in CLI without requiring full UI/tray (WS-5/WS-6).
-/// Non-dry-run forwards to `ui` / `tray` entrypoints.
+/// Dry-run returns `Ok` without opening UI (test seam only — not merge acceptance).
+/// Non-dry-run forwards to Croft / Loft entrypoints.
 pub fn dispatch(mode: LaunchMode, dry_run: bool) -> crate::error::Result<()> {
     if dry_run {
         return Ok(());
@@ -88,6 +79,5 @@ pub fn dispatch(mode: LaunchMode, dry_run: bool) -> crate::error::Result<()> {
     match mode {
         LaunchMode::Croft => crate::ui::croft::run(false),
         LaunchMode::Loft => crate::ui::loft::run(false),
-        LaunchMode::Tray => crate::tray::run(false),
     }
 }
