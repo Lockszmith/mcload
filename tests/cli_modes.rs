@@ -30,7 +30,7 @@ fn help_lists_croft_loft_not_tray() {
 }
 
 #[test]
-fn help_lists_loft_no_tray_and_verbose() {
+fn help_lists_loft_no_tray_verbose_and_no_browser() {
     let mut cmd = Command::cargo_bin("mcload").expect("mcload binary");
     let assert = cmd.args(["loft", "--help"]).assert().success();
     let stdout = String::from_utf8_lossy(&assert.get_output().stdout);
@@ -42,6 +42,10 @@ fn help_lists_loft_no_tray_and_verbose() {
     assert!(
         lower.contains("verbose"),
         "loft help should list --verbose:\n{stdout}"
+    );
+    assert!(
+        lower.contains("no-browser"),
+        "loft help should list --no-browser:\n{stdout}"
     );
 }
 
@@ -55,13 +59,20 @@ fn parse_selects_croft_and_loft() {
 }
 
 #[test]
-fn parse_loft_no_tray_and_verbose() {
-    let loft = cli::parse_from(["mcload", "loft", "--no-tray", "--verbose"]);
+fn parse_loft_flags_no_tray_verbose_no_browser() {
+    let loft = cli::parse_from([
+        "mcload",
+        "loft",
+        "--no-tray",
+        "--verbose",
+        "--no-browser",
+    ]);
     assert_eq!(
         cli::loft_options(&loft),
         LoftOptions {
             no_tray: true,
             verbose: true,
+            no_browser: true,
         }
     );
 }
@@ -100,10 +111,16 @@ fn tray_policy_respects_no_tray_flag() {
     assert!(!loft::should_use_tray(LoftOptions {
         no_tray: true,
         verbose: false,
+        no_browser: false,
     }));
     // Default: tray only when OS supports it.
     assert_eq!(
         loft::should_use_tray(LoftOptions::default()),
         loft::tray_supported()
     );
+}
+
+#[test]
+fn no_browser_default_is_false() {
+    assert!(!LoftOptions::default().no_browser);
 }

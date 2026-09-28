@@ -160,14 +160,10 @@ pub fn run_loop(listener: TcpListener, handle: WebHostHandle) -> Result<()> {
     Ok(())
 }
 
-/// Convenience: bind ephemeral port, run until quit.
-pub fn run_until_quit(verbose: bool) -> Result<SocketAddr> {
+/// Convenience: bind ephemeral port, run until quit (no browser / URL side effects).
+pub fn run_until_quit() -> Result<SocketAddr> {
     let (listener, handle) = bind_loft("127.0.0.1:0")?;
     let addr = handle.local_addr();
-    if verbose {
-        eprintln!("McLoad Loft — FrankenTUI Web listening on {}", handle.url());
-        eprintln!("Press q in the UI to stop the host.");
-    }
     run_loop(listener, handle)?;
     Ok(addr)
 }

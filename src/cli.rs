@@ -38,9 +38,12 @@ pub enum Command {
         /// Force foreground web server (WSL / headless CI / no-tray OS).
         #[arg(long, default_value_t = false)]
         no_tray: bool,
-        /// Allow CLI stdout/stderr (default tray loft is quiet).
+        /// Allow CLI stdout/stderr (default tray loft is quiet aside from terminal URL).
         #[arg(long, default_value_t = false)]
         verbose: bool,
+        /// Do not open the default browser on launch.
+        #[arg(long, default_value_t = false)]
+        no_browser: bool,
     },
 }
 
@@ -76,12 +79,19 @@ pub fn dry_run(args: &Args) -> bool {
     }
 }
 
-/// Loft-only flags (`--no-tray` / `--verbose`); default when not loft.
+/// Loft-only flags (`--no-tray` / `--verbose` / `--no-browser`); default when not loft.
 pub fn loft_options(args: &Args) -> LoftOptions {
     match args.command {
         Some(Command::Loft {
-            no_tray, verbose, ..
-        }) => LoftOptions { no_tray, verbose },
+            no_tray,
+            verbose,
+            no_browser,
+            ..
+        }) => LoftOptions {
+            no_tray,
+            verbose,
+            no_browser,
+        },
         _ => LoftOptions::default(),
     }
 }

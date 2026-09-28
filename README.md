@@ -17,20 +17,21 @@ cargo run -- --help
 cargo run -- --version
 ```
 
-| Mode / flag             | Purpose                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| `mcload --help`         | Print CLI help and exit                                                                    |
-| `mcload --version`      | Print version (`CARGO_PKG_VERSION`) and exit                                               |
-| `mcload croft`          | Croft — FrankenTUI TTY UI (needs a real TTY; press `q` to quit)                            |
-| `mcload loft`           | Loft — FrankenTUI Web UI; tray+BG on tray-capable OS; press `q` in the UI to stop the host |
-| `mcload loft --no-tray` | Loft foreground web server (WSL / headless CI; OS without tray); press `q` to stop |
-| `mcload loft --verbose` | Loft with stdout/stderr logs (default loft is quiet when tray/BG)                          |
-| `… --dry-run`           | Test seam only: exit 0 without opening UI (not merge / UI acceptance)                      |
-| `--config <path>`       | Override config YAML path (global)                                                         |
-| `--project <dir>`       | Per-project config directory (global)                                                      |
-| `--log-level <level>`   | Override log level from CLI (global)                                                       |
+| Mode / flag                | Purpose                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| `mcload --help`            | Print CLI help and exit                                                                |
+| `mcload --version`         | Print version (`CARGO_PKG_VERSION`) and exit                                           |
+| `mcload croft`             | Croft — FrankenTUI TTY UI (needs a real TTY; press `q` to quit)                        |
+| `mcload loft`              | Loft — FrankenTUI Web UI; tray+BG on tray-capable OS; opens browser; press `q` to stop |
+| `mcload loft --no-tray`    | Loft foreground web server (WSL / headless CI; OS without tray); press `q` to stop     |
+| `mcload loft --no-browser` | Do not open the default browser on launch (tray still has **Open in Browser**)         |
+| `mcload loft --verbose`    | Loft with extra stdout/stderr logs                                                     |
+| `… --dry-run`              | Test seam only: exit 0 without opening UI (not merge / UI acceptance)                  |
+| `--config <path>`          | Override config YAML path (global)                                                     |
+| `--project <dir>`          | Per-project config directory (global)                                                  |
+| `--log-level <level>`      | Override log level from CLI (global)                                                   |
 
-**Croft** requires an interactive TTY. Without one it exits with a clear `TtyUnavailable` error (re-run in a real terminal, or use `--dry-run` / `MCLOAD_STARTUP_PROBE=1`). Press **`q`** to quit. **Loft** hosts the same FrankenTUI app over Web: press **`q`** in the UI to stop the Web host (process exits 0). On native Windows (and other tray-capable OS), default `mcload loft` shows a tray icon and runs in the background with no CLI output unless `--verbose`. Use `--no-tray` on WSL / headless CI or when the OS has no tray — then the web server runs in the foreground. Ctrl+C is an interrupt escape hatch only, not the primary quit path.
+**Croft** requires an interactive TTY. Without one it exits with a clear `TtyUnavailable` error (re-run in a real terminal, or use `--dry-run` / `MCLOAD_STARTUP_PROBE=1`). Press **`q`** to quit. **Loft** hosts the same FrankenTUI app over Web: press **`q`** in the UI to stop the Web host (process exits 0). On launch, Loft opens the default browser unless `--no-browser`; when started from a terminal it prints the listen URL. On native Windows (and macOS), default `mcload loft` shows a tray icon (menu: **Open in Browser**, **Quit**) and runs in the background. Use `--no-tray` on WSL / headless CI or when the OS has no tray — then the web server runs in the foreground. Ctrl+C is an interrupt escape hatch only, not the primary quit path.
 
 FrankenTUI is vendored as a git submodule at [`third_party/frankentui`](third_party/frankentui) (path dependencies). After clone: `git submodule update --init --recursive`.
 

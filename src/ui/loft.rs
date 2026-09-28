@@ -1,5 +1,7 @@
 //! Loft launch — FrankenTUI Web host + optional tray under Loft (not a CLI mode).
 
+use std::io::IsTerminal;
+use std::process::Command;
 use std::thread;
 use std::time::Duration;
 
@@ -9,13 +11,15 @@ use crate::ui::StartupReport;
 
 const BACKEND_ID: &str = "frankentui-web";
 
-/// Options for Loft launch (from CLI `--no-tray` / `--verbose`).
+/// Options for Loft launch (from CLI flags).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct LoftOptions {
     /// Force foreground web server (also used when OS has no tray).
     pub no_tray: bool,
-    /// Allow CLI stdout/stderr (default loft+tray is quiet).
+    /// Allow extra CLI stdout/stderr beyond the terminal URL line.
     pub verbose: bool,
+    /// Do not open the default browser on launch.
+    pub no_browser: bool,
 }
 
 /// Whether this OS should default to tray+BG under Loft.
@@ -28,6 +32,55 @@ pub fn tray_supported() -> bool {
 /// Effective tray use: supported OS and not `--no-tray`.
 pub fn should_use_tray(opts: LoftOptions) -> bool {
     tray_supported() && !opts.no_tray
+}
+
+/// True when Loft was started from an interactive terminal (print URL).
+pub fn running_from_terminal() -> bool {
+    std::io::stderr().is_terminal() || std::io::stdout().is_terminal()
+}
+
+/// Open `url` in the OS default browser (best-effort; never fails the host).
+pub fn open_default_browser(url: &str) -> Result<()> {
+    let result = {
+        #[cfg(target_os = "windows")]
+        {
+            // empty title arg after `start` so paths/URLs with special chars work
+            Command::new("cmd")
+                .args(["/C", "start", "", url])
+                .spawn()
+                .map(|_| ())
+        }
+        #[cfg(target_os = "macos")]
+        {
+            Command::new("open").arg(url).spawn().map(|_| ())
+        }
+        #[cfg(all(unix, not(target_os = "macos")))]
+        {
+            Command::new("xdg-open").arg(url).spawn().map(|_| ())
+        }
+    };
+    result.map_err(|e| crate::error::Error::Ui(format!("failed to open browser: {e}")))
+}
+
+fn print_url_if_terminal(url: &str, verbose: bool) {
+    if running_from_terminal() || verbose {
+        eprintln!("McLoad Loft — FrankenTUI Web listening on {url}");
+        eprintln!("Press q in the UI to stop the host.");
+    }
+}
+
+fn maybe_open_browser(url: &str, opts: LoftOptions) {
+    if opts.no_browser {
+        return;
+    }
+    if let Err(e) = open_default_browser(url) {
+        // Soft-fail: host keeps running; surface when a terminal is attached.
+        if running_from_terminal() || opts.verbose {
+            eprintln!("{e}");
+        } else {
+            tracing::warn!("{e}");
+        }
+    }
 }
 
 /// Non-blocking startup probe for tests / `MCLOAD_STARTUP_PROBE=1`.
@@ -54,35 +107,31 @@ pub fn run(dry_run: bool, opts: LoftOptions) -> Result<()> {
 }
 
 fn run_foreground(opts: LoftOptions) -> Result<()> {
-    // Foreground: always print listen URL so the user can open the UI.
-    // Primary quit is `q` in the UI; Ctrl+C remains an interrupt escape hatch.
-    let verbose = true;
-    let _ = opts;
-    loft_host::run_until_quit(verbose)?;
+    let (listener, handle) = loft_host::bind_loft("127.0.0.1:0")?;
+    let url = handle.url();
+    print_url_if_terminal(&url, opts.verbose);
+    maybe_open_browser(&url, opts);
+    loft_host::run_loop(listener, handle)?;
     Ok(())
 }
 
 fn run_with_tray(opts: LoftOptions) -> Result<()> {
     let (listener, handle) = loft_host::bind_loft("127.0.0.1:0")?;
-    if opts.verbose {
-        eprintln!(
-            "McLoad Loft — FrankenTUI Web listening on {} (tray+BG)",
-            handle.url()
-        );
-        eprintln!("Press q in the UI (or tray Quit) to stop the host.");
-    }
+    let url = handle.url();
+    print_url_if_terminal(&url, opts.verbose);
+    maybe_open_browser(&url, opts);
 
     let handle_bg = handle.clone();
     let join = thread::spawn(move || loft_host::run_loop(listener, handle_bg));
 
     #[cfg(any(windows, target_os = "macos"))]
     {
-        tray::run_tray_until_quit(handle, opts.verbose)?;
+        tray::run_tray_until_quit(handle, url)?;
     }
 
     #[cfg(not(any(windows, target_os = "macos")))]
     {
-        let _ = opts;
+        let _ = url;
         // Unreachable when should_use_tray is correct; keep process alive until host stops.
         while !handle.is_stopped() {
             thread::sleep(Duration::from_millis(100));
@@ -103,12 +152,15 @@ mod tray {
     use tray_icon::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
     use tray_icon::{Icon, TrayIconBuilder, TrayIconEvent};
 
-    pub fn run_tray_until_quit(handle: loft_host::WebHostHandle, _verbose: bool) -> Result<()> {
+    pub fn run_tray_until_quit(handle: loft_host::WebHostHandle, url: String) -> Result<()> {
         let icon = make_icon();
         let menu = Menu::new();
+        let open_item = MenuItem::new("Open in Browser", true, None);
         let quit_item = MenuItem::new("Quit", true, None);
+        let _ = menu.append(&open_item);
         let _ = menu.append(&PredefinedMenuItem::separator());
         let _ = menu.append(&quit_item);
+        let open_id = open_item.id().clone();
         let quit_id = quit_item.id().clone();
 
         let _tray = TrayIconBuilder::new()
@@ -134,7 +186,11 @@ mod tray {
             }
 
             while let Ok(event) = menu_channel.try_recv() {
-                if event.id == quit_id {
+                if event.id == open_id {
+                    if let Err(e) = open_default_browser(&url) {
+                        tracing::warn!("{e}");
+                    }
+                } else if event.id == quit_id {
                     handle.request_stop();
                     done.store(true, Ordering::SeqCst);
                     *control_flow = ControlFlow::Exit;
@@ -142,7 +198,7 @@ mod tray {
                 }
             }
             while let Ok(_event) = tray_channel.try_recv() {
-                // Left-click etc. — no-op for scaffolding beyond Quit menu.
+                // Left-click etc. — no-op for scaffolding beyond menu items.
             }
         });
         Ok(())
