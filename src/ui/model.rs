@@ -1,13 +1,16 @@
-//! Minimal hello-tick Model shared by Croft (TTY) and Loft (Web).
+//! Minimal shared FrankenTUI Model/App for Croft (TTY) and Loft (Web).
+//!
+//! Only the display name and render backend differ between modes.
 
 use ftui::core::event::Event;
 use ftui::core::geometry::Rect;
 use ftui::render::frame::Frame;
 use ftui::runtime::{App, Cmd, Model, ScreenMode};
+use ftui::widgets::block::Block;
 use ftui::widgets::paragraph::Paragraph;
 use ftui::widgets::Widget;
 
-/// Tiny demo app: tick counter + quit on `q`.
+/// Shared min UI: bordered viewport + press-`q`-to-quit.
 pub struct HelloTick {
     ticks: u64,
     title: &'static str,
@@ -17,20 +20,25 @@ impl HelloTick {
     pub fn croft() -> Self {
         Self {
             ticks: 0,
-            title: "McLoad Croft",
+            title: "Croft",
         }
     }
 
     pub fn loft() -> Self {
         Self {
             ticks: 0,
-            title: "McLoad Loft",
+            title: "Loft",
         }
+    }
+
+    /// Display name shown in the bordered title (`"Croft"` / `"Loft"`).
+    pub fn title(&self) -> &'static str {
+        self.title
     }
 
     /// Build an App ready for interactive TTY `run()` (does not enter the loop).
     pub fn croft_app() -> ftui::runtime::AppBuilder<Self> {
-        App::new(Self::croft()).screen_mode(ScreenMode::Inline { ui_height: 3 })
+        App::new(Self::croft()).screen_mode(ScreenMode::Inline { ui_height: 8 })
     }
 }
 
@@ -63,11 +71,15 @@ impl Model for HelloTick {
     }
 
     fn view(&self, frame: &mut Frame) {
+        let area = Rect::new(0, 0, frame.width(), frame.height());
+        let block = Block::bordered().title(self.title);
+        let inner = block.inner(area);
+        block.render(area, frame);
         let text = format!(
-            "{} — FrankenTUI hello-tick={}  (press 'q' to quit)",
-            self.title, self.ticks
+            "McLoad {title} — press 'q' to quit  (ticks={ticks})",
+            title = self.title,
+            ticks = self.ticks
         );
-        let area = Rect::new(0, 0, frame.width(), frame.height().min(3));
-        Paragraph::new(text).render(area, frame);
+        Paragraph::new(text).render(inner, frame);
     }
 }

@@ -14,7 +14,7 @@ fn croft_dry_run_seam_returns_ok() {
 
 #[test]
 fn loft_dry_run_seam_returns_ok() {
-    loft::run(true).expect("loft dry-run seam should Ok(())");
+    loft::run(true, loft::LoftOptions::default()).expect("loft dry-run seam should Ok(())");
 }
 
 #[test]

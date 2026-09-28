@@ -2,6 +2,7 @@
 //!
 //! Modes: `croft` (TTY) / `loft` (Web). `--dry-run` is a test seam only.
 //! `MCLOAD_STARTUP_PROBE=1` runs a non-blocking FrankenTUI startup probe (CI seam).
+//! Loft: `--no-tray` / `--verbose`; tray is default-on when OS supports it (not a CLI mode).
 
 use clap::Parser;
 use mcload::cli::{self, Args, LaunchMode};
@@ -30,7 +31,7 @@ fn main() {
             }
         }
 
-        if let Err(err) = cli::dispatch(mode, cli::dry_run(&args)) {
+        if let Err(err) = cli::dispatch(mode, cli::dry_run(&args), cli::loft_options(&args)) {
             eprintln!("{err}");
             std::process::exit(1);
         }

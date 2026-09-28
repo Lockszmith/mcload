@@ -1,14 +1,14 @@
 # Epic 0001 — Initial Scaffolding
 
-> **Status:** REVISE — impl green, awaiting MC Croft/Loft confirm  
+> **Status:** REVISE — Wave C **implemented** (parity + `q` quit + Loft tray code); **merge gated** on MC Windows tray / Croft+Loft YES  
 > **Binary:** `mcload`  
 > **Tagline:** "There can be only one!"  
 > **Epic branch:** `epic/scaffolding`  
 > **Repo state at original plan time:** essentially empty — `.git` (no commits on `main`), `.vscode/mcload.code-workspace` only.  
 > **Scaffolding verifier (historical):** Waves A–E green; `cargo test` **25/25**; see [0001-test-green-log.md](./0001-test-green-log.md).  
-> **REVISE verifier:** Waves A–C green; Wave D (docs) in progress / this pass; `cargo test` **30/30**; see GREEN baseline in [0001-test-green-log.md](./0001-test-green-log.md).  
+> **REVISE verifier:** Waves A–B green; Wave C re-impl via `third_party/frankentui` submodule + `loft_host` (not static HTML); await MC YES; see [0001-test-green-log.md](./0001-test-green-log.md).  
 > **REVISE schedule:** [0001-revise-workload-split.md](./0001-revise-workload-split.md) (waves A–D / R-WS-1…5).  
-> **Merge gate:** MC manual confirm that Croft + Loft **actually start**. Do **not** ask to merge until that YES. **Never push.**
+> **Merge gate:** MC manual confirm that Croft + Loft meet **parity / `q` quit / tray** DoD. Do **not** ask to merge until that YES. **Never push.**
 
 ---
 
@@ -17,17 +17,18 @@
 Stand up a **compilable, testable single-crate Rust binary** named `mcload` with:
 
 1. Cargo project + `main` entry
-2. CLI (clap) for help/version + launch modes: **Croft** (TTY UI) and **Loft** (Web UI) — **no** top-level `tray` mode
-3. **Real FrankenTUI startup** for Croft + Loft (minimal hello-tick UI is enough; dry-run-only is **not** merge acceptance)
-4. Tray capability (when OS supports it) owned **under Loft** as background + tray — not a separate CLI mode
-5. YAML config persistence (user + per-project) with CLI overrides
-6. Metadata persistence layer API with **concurrent access** (storage backend may be stubbed behind the API)
-7. Queue stubs: **Activity** (Pause/Resume/Abort), **Gathering** (fresh metadata), **Reckoning** (fresh→ready); plugin engagement/fingerprint/similarity markers as empty hooks
-8. Dev-container (Rust)
-9. README + MIT LICENSE
-10. TDD-proven tests: binary starts, config round-trip, metadata concurrent-access, **real Croft/Loft startup contracts**
-11. Cross-compile notes for Windows, Linux x86_64, macOS aarch64
-12. **LF line endings** for the repo (`.gitattributes` + local git eol hygiene + normalize commit)
+2. CLI (clap) for help/version + launch modes: **Croft** (TTY UI) and **Loft** (Web UI) — **no** top-level `tray` mode; Loft owns `--no-tray` / `--verbose` as needed
+3. **Parity UX:** Croft and Loft run the **same** FrankenTUI `Model`/`App` — only allowed differences are display name (`"Croft"` vs `"Loft"`) and render backend (TTY vs Web). Minimum view: border around the viewport plus text that pressing `q` quits. Dry-run-only is **not** merge acceptance.
+4. **Quit:** pressing `q` in the UI exits the app for **both** backends. For Loft, `q` **MUST** stop the Web host / daemon process (process exits 0) — not only hide a window. Ctrl+C may remain as an extra interrupt; it is **not** the primary documented quit path.
+5. **Tray under Loft (MUST on tray-capable OS):** On Windows (and any OS with tray support), `mcload loft` **MUST** show a tray icon and keep running in the background after launch, with **no** CLI stdout/stderr unless `--verbose`. On OS without tray support, or when passed `--no-tray`, run the web server in the foreground (Ctrl+C allowed to exit). WSL / headless CI **document** `--no-tray`; native Windows host **MUST** show the icon. Not a CLI mode; **not** `loft --tray` required.
+6. YAML config persistence (user + per-project) with CLI overrides
+7. Metadata persistence layer API with **concurrent access** (storage backend stubbed behind the API is OK)
+8. Queue stubs: **Activity** (Pause/Resume/Abort), **Gathering** (fresh metadata), **Reckoning** (fresh→ready); plugin engagement/fingerprint/similarity markers as empty hooks
+9. Dev-container (Rust)
+10. README + MIT LICENSE
+11. TDD-proven tests: binary starts, config round-trip, metadata concurrent-access, **real Croft/Loft parity + quit + startup contracts**
+12. Cross-compile notes for Windows, Linux x86_64, macOS aarch64
+13. **LF line endings** for the repo (`.gitattributes` + local git eol hygiene + normalize commit)
 
 Process constraints for implementers:
 
@@ -44,14 +45,15 @@ Process constraints for implementers:
 - Real filesystem profiling / chunk hashing / similarity algorithms
 - Real merge-to-SoT workflows
 - Real plugin implementations (fingerprint, identity, similarity engines)
-- Full FrankenTUI UI polish / production Loft WASM host (startup + minimal tick UI only; polish → epic 0006)
-- Production tray menus / OS notifications beyond “Loft may hold a tray when the OS supports it”
+- Full FrankenTUI UI polish beyond the shared minimal Model/App (border + quit hint) — polish → epic 0006
+- Rich tray menus / OS notifications beyond the required tray icon + background keep-alive under Loft
 - Activity/Gathering/Reckoning worker loops (types + markers only)
 - Publishing to crates.io
 - CI pipelines beyond what the README documents for local/dev-container use
 - `git push` of any kind
-- ~~Dry-run-only stub success as UI acceptance~~ (**invalidated** — `--dry-run` may remain as a test seam only)
+- ~~Dry-run-only stub success as UI acceptance~~ (**invalidated** — `--dry-run` remains as a test seam only)
 - ~~Top-level `mcload tray` CLI mode~~ (**removed** in REVISE)
+- ~~Parking Loft tray / quit / parity in epic 0005~~ (**invalidated** — those are **0001 MUST**)
 
 ---
 
@@ -63,14 +65,16 @@ Single binary crate `mcload` (no workspace split yet — revisit only if Franken
 ┌──────────────────────────────────────────────────┐
 │                    mcload CLI                    │
 │     clap: --help | --version | croft | loft      │
+│     loft: [--no-tray] [--verbose]                │
 └─────────────────┬────────────────┬───────────────┘
                   │                │
                   ▼                ▼
              ┌─────────┐     ┌─────────────────────┐
              │  Croft  │     │        Loft         │
-             │ Franken │     │ FrankenTUI Web UI   │
-             │ TUI TTY │     │ (+ optional tray /  │
-             │         │     │  BG when OS allows) │
+             │ same    │     │ same FrankenTUI     │
+             │ Model/  │     │ Model/App (Web)     │
+             │ App TTY │     │ + tray+BG MUST when │
+             │         │     │ OS supports tray    │
              └────┬────┘     └──────────┬──────────┘
                   │                     │
                   └──────────┬──────────┘
@@ -84,20 +88,21 @@ Single binary crate `mcload` (no workspace split yet — revisit only if Franken
 
 ### Modules (suggested `src/` layout)
 
-| Module        | Responsibility                                                            |
-| ------------- | ------------------------------------------------------------------------- |
-| `main.rs`     | Binary entry; parse CLI; dispatch mode                                    |
-| `cli.rs`      | clap `Args` / subcommands / overrides — modes: **croft**, **loft** only   |
-| `config.rs`   | User + project YAML load/save; merge with CLI                             |
-| `metadata/`   | Concurrent store trait + in-memory (or sled/sqlite) stub                  |
-| `queues/`     | Activity, Gathering, Reckoning stubs + `Fresh`/`Ready` markers            |
-| `plugins/`    | Trait stubs: engagement, fingerprint, similarity                          |
-| `ui/croft.rs` | Croft launch — **real** FrankenTUI TTY (`ftui` / `ftui-tty` App/Program)  |
-| `ui/loft.rs`  | Loft launch — **real** FrankenTUI Web (`ftui-web` host); optional tray/BG |
-| `error.rs`    | Shared error type (`thiserror` or `anyhow` for app)                       |
-| `lib.rs`      | Library surface for integration tests                                     |
+| Module        | Responsibility                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| `main.rs`     | Binary entry; parse CLI; dispatch mode                                                                  |
+| `cli.rs`      | clap `Args` / subcommands / overrides — modes: **croft**, **loft** only; loft `--no-tray` / `--verbose` |
+| `config.rs`   | User + project YAML load/save; merge with CLI                                                           |
+| `metadata/`   | Concurrent store trait + in-memory (or sled/sqlite) stub                                                |
+| `queues/`     | Activity, Gathering, Reckoning stubs + `Fresh`/`Ready` markers                                          |
+| `plugins/`    | Trait stubs: engagement, fingerprint, similarity                                                        |
+| `ui/shared`   | Shared FrankenTUI `Model`/`App` (border + quit hint); Croft/Loft differ only by name + backend          |
+| `ui/croft.rs` | Croft launch — FrankenTUI TTY (`ftui` / `ftui-tty`); `q` exits process                                  |
+| `ui/loft.rs`  | Loft launch — FrankenTUI Web (`ftui-web`); `q` stops host (exit 0); tray+BG MUST when OS supports        |
+| `error.rs`    | Shared error type (`thiserror` or `anyhow` for app)                                                     |
+| `lib.rs`      | Library surface for integration tests                                                                   |
 
-**Removed in REVISE:** `src/tray.rs` and top-level `feature = "tray"` as a standalone launch path. Any tray support lives under Loft (`ui/loft.rs` or a Loft-private helper), not as `mcload tray`.
+**Removed in REVISE:** `src/tray.rs` and top-level `feature = "tray"` as a standalone launch path. Tray support lives under Loft (`ui/loft.rs` or a Loft-private helper), not as `mcload tray`. **`loft --tray` is not a required mode** — tray is default-on when the OS supports it; use `--no-tray` to force foreground.
 
 Library crate + binary: expose `mcload` as both `lib` and `bin` so tests can import config/metadata without spawning always.
 
@@ -126,7 +131,7 @@ mcload/
 ├── src/
 │   ├── main.rs
 │   ├── lib.rs
-│   ├── cli.rs                # croft | loft only
+│   ├── cli.rs                # croft | loft only; loft --no-tray / --verbose
 │   ├── config.rs
 │   ├── error.rs
 │   ├── metadata/
@@ -134,14 +139,15 @@ mcload/
 │   ├── plugins/
 │   └── ui/
 │       ├── mod.rs
-│       ├── croft.rs          # real TTY startup
-│       └── loft.rs           # real Web startup (+ optional tray under Loft)
+│       ├── shared (or equivalent)  # same Model/App for Croft + Loft
+│       ├── croft.rs                # TTY backend; q quits
+│       └── loft.rs                 # Web backend; q stops host; tray+BG MUST
 └── tests/
     ├── cli_starts.rs
-    ├── cli_modes.rs          # croft/loft only; no tray
+    ├── cli_modes.rs          # croft/loft only; no tray mode; loft --no-tray / --verbose
     ├── config_roundtrip.rs
     ├── metadata_concurrent.rs
-    └── … startup contracts (no tray_stub.rs)
+    └── … startup / parity / quit contracts (no tray_stub.rs)
 ```
 
 **Deleted / folded:** `src/tray.rs`, `tests/tray_stub.rs`, clap `Tray` / `LaunchMode::Tray`.
@@ -160,11 +166,18 @@ mcload/
 | `tracing` + `tracing-subscriber`                                | Structured logs                                                                                                                                                                                                                                                               |
 | `tempfile` (dev)                                                | Isolated config/metadata test dirs                                                                                                                                                                                                                                            |
 | `assert_cmd` + `predicates` (dev)                               | Binary smoke tests                                                                                                                                                                                                                                                            |
-| FrankenTUI **0.7.x from crates.io**                             | Prefer published stack: `ftui`, `ftui-runtime`, `ftui-tty`, `ftui-web` (plus any transitive `ftui-*` the 0.7.0 graph needs). Use **nightly** if ftui requires it. Croft = TTY via App/Program; Loft = Web via `ftui-web` host path. Minimal hello-tick UI satisfies “starts”. |
-| Tray (optional, under Loft only)                                | Only if OS supports it and Loft chooses to background; **not** a top-level CLI mode or required `feature = "tray"` launch path                                                                                                                                                |
+| FrankenTUI **0.7.x from crates.io**                             | Prefer published stack: `ftui`, `ftui-runtime`, `ftui-tty`, `ftui-web` (plus any transitive `ftui-*` the 0.7.0 graph needs). Use **nightly** if ftui requires it. Croft = TTY via App/Program; Loft = Web via `ftui-web` host path. **Same** `Model`/`App` for both; minimum = bordered viewport + press-`q`-to-quit text. |
+| Tray (**MUST** under Loft when OS supports)                     | Default-on tray icon + background keep-alive for Loft on Windows / tray-capable OS; silent unless `--verbose`; `--no-tray` forces foreground. **Not** a top-level CLI mode; **not** `loft --tray` required. No standalone `feature = "tray"` launch path.                                                                          |
 
 **REVISE strategy for FrankenTUI (overrides prior stub-default):**  
-Wire real crates.io `ftui` 0.7.x deps. Croft must start TTY UI (or return a **clear actionable error** only if the environment truly cannot run a TTY UI). Loft must start Web UI. `--dry-run` may remain as a test seam; **dry-run-only success is not acceptance for merge**.
+Wire real crates.io `ftui` 0.7.x deps. Croft and Loft **MUST** share one FrankenTUI `Model`/`App` (name + backend only differ). Croft starts TTY UI (or returns a **clear actionable error** only if the environment truly cannot run a TTY UI). Loft starts Web UI hosting that same app; pressing `q` exits the process (Web host stops). `--dry-run` remains as a test seam; **dry-run-only success is not acceptance for merge**.
+
+**FAIL (UI / host):**
+- Static HTML-only Loft (no shared FrankenTUI `Model`/`App`) = **FAIL**
+- Divergent Croft vs Loft UX beyond name + render backend = **FAIL**
+- Ctrl+C-only quit for Loft (no `q` → process exit 0) = **FAIL**
+- No tray icon on native Windows host for default `mcload loft` = **FAIL**
+- Requiring `loft --tray` or a top-level `tray` mode = **FAIL**
 
 **Metadata storage (API first):** unchanged — `MetadataStore: Send + Sync` with in-memory concurrent default for epic 0001.
 
@@ -230,20 +243,27 @@ Execute per [0001-revise-workload-split.md](./0001-revise-workload-split.md). Ma
 - [x] Commit RED intentionally: `c4b6e17` `test: require real Croft/Loft startup contracts`
 - [x] Do **not** implement FrankenTUI until this RED commit is on the branch
 
-### R-Step 4 — Real FrankenTUI startup (Wave C / R-WS-3)
-- [x] Wire crates.io `ftui` / `ftui-tty` / `ftui-web` (0.7.x); stable toolchain OK
-- [x] `mcload croft` starts FrankenTUI TTY UI (or clear `TtyUnavailable` if env cannot)
-- [x] `mcload loft` starts FrankenTUI Web UI and prints local listen URL; tray under Loft not required yet
-- [x] `--dry-run` remains as seam; suite proves non-dry-run via `MCLOAD_STARTUP_PROBE=1` + startup contracts
-- [x] Commit: `406b59c` `feat: wire FrankenTUI Croft TTY and Loft Web startup`
+### R-Step 4 — Real FrankenTUI parity + quit + Loft tray (Wave C / R-WS-3)
+- [x] Wire FrankenTUI via `third_party/frankentui` git submodule path deps (`ftui` / `ftui-tty` / `ftui-web`); nightly pin matches submodule
+- [x] Shared FrankenTUI `Model`/`App` for Croft + Loft (only name + TTY/Web backend differ)
+- [x] Minimum view: bordered viewport + text that press `q` quits
+- [x] `mcload croft`: `q` exits process
+- [x] `mcload loft`: `q` **stops Web host / daemon** (process exit 0); Ctrl+C is interrupt only, not primary quit docs
+- [x] Tray under Loft **MUST** on Windows / macOS: icon + background; quiet unless `--verbose` *(MC: confirm tray icon on native Windows host)*
+- [x] `--no-tray` (and no-tray OS): foreground web server; document for WSL/headless CI
+- [x] Native Windows host default `mcload loft` **MUST** show tray — **FAIL** if missing *(await MC Windows check)*
+- [x] `--dry-run` remains as seam; suite proves non-dry-run via `MCLOAD_STARTUP_PROBE=1` + startup / quit contracts
+- [x] Prior commit: `406b59c` — **superseded** by submodule + `loft_host` WebHost + tray-under-Loft
+- [x] Follow-up: parity + quit + tray seams green in CI; Windows tray manual gate remains
 
 ### R-Step 5 — Docs alignment (Wave D / R-WS-5)
-- [x] README, this plan’s DoD checkboxes, report/logs, MASTER summary, prompt-history REVISE section (this pass; parent commits)
-- [ ] Commit subject example: `docs: align README and plans with 0001 revise` *(parent commits)*
+- [ ] README, this plan’s DoD checkboxes, report/logs, MASTER summary, prompt-history — **after** Wave C re-closes
+- [ ] Document: `q` quit for both; Loft tray default-on; `--no-tray` for WSL/CI; `--verbose` for loft logs
+- [ ] Commit subject example: `docs: align README and plans with 0001 revise` *(blocked until Wave C DoD met)*
 
 ### R-Step 6 — MC manual merge gate (human)
-- [ ] MC manually confirms Croft starts
-- [ ] MC manually confirms Loft starts
+- [ ] MC manually confirms Croft: shared UX + `q` quit
+- [ ] MC manually confirms Loft: shared UX + `q` stops host + tray on Windows (or `--no-tray` only where documented)
 - [ ] Only after explicit MC **YES** may PM merge locally — still **never push** unless separately ordered
 - [ ] Plans must **not** solicit merge until that YES
 
@@ -256,26 +276,29 @@ Execute per [0001-revise-workload-split.md](./0001-revise-workload-split.md). Ma
 ```bash
 # From repo root (Linux / WSL / devcontainer)
 cargo build
-cargo run -- croft          # needs interactive TTY; press q to quit
-cargo run -- loft           # note printed URL; open in browser; Ctrl+C to stop
+cargo run -- croft                 # TTY; press q to quit (process exits)
+cargo run -- loft --no-tray        # foreground Web; press q in UI to stop host
+                                   # (WSL/headless: --no-tray is the documented path)
 
 # Non-blocking probes (CI seam — not the merge bar alone)
 MCLOAD_STARTUP_PROBE=1 cargo run -- croft
-MCLOAD_STARTUP_PROBE=1 cargo run -- loft
+MCLOAD_STARTUP_PROBE=1 cargo run -- loft --no-tray
 ```
 
 ### Host (PowerShell — Windows)
 
 ```powershell
-# From repo root
+# From repo root — native Windows MUST show tray for default loft
 cargo test
 cargo run -- --help
 cargo run -- --version
-cargo run -- croft          # must start TTY UI (or clear TtyUnavailable)
-cargo run -- loft           # must print http://127.0.0.1:PORT and serve HTML
+cargo run -- croft                 # shared UX; press q to quit
+cargo run -- loft                  # tray icon + BG; quiet unless --verbose; q stops host
+cargo run -- loft --verbose        # same + stdout/stderr logs
+cargo run -- loft --no-tray        # foreground only (escape hatch / CI parity)
 $env:MCLOAD_STARTUP_PROBE = "1"; cargo run -- croft
-$env:MCLOAD_STARTUP_PROBE = "1"; cargo run -- loft
-# Optional seam only — NOT merge acceptance alone:
+$env:MCLOAD_STARTUP_PROBE = "1"; cargo run -- loft --no-tray
+# Seam only — NOT merge acceptance alone:
 cargo run -- croft --dry-run
 cargo run -- loft --dry-run
 ```
@@ -288,19 +311,20 @@ Unchanged matrix notes in README (Win / Linux x86_64 / macOS aarch64). Scaffoldi
 
 ## Open questions / decisions
 
-| #   | Topic                            | Status / proposal                                                                                                                                                                       |
-| --- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | FrankenTUI dependency strategy   | **LOCKED (REVISE):** crates.io **0.7.x** (`ftui`, `ftui-runtime`, `ftui-tty`, `ftui-web`); nightly if required                                                                          |
-| 2   | Async runtime                    | Open — tokio everywhere vs sync core + async at UI edges                                                                                                                                |
-| 3   | Metadata backend for scaffolding | **LOCKED (scaffolding):** in-memory concurrent + optional file dump                                                                                                                     |
-| 4   | Config schema v0 fields          | Open — minimal `{ data_dir, log_level, ui: { default_mode } }`                                                                                                                          |
-| 5   | CLI shape                        | **LOCKED:** subcommands `mcload croft` / `mcload loft` only; **no** `mcload tray`                                                                                                       |
-| 6   | Dry-run / test seam              | **LOCKED:** `--dry-run` may remain; **not** sole UI acceptance                                                                                                                          |
-| 7   | Tray                             | **LOCKED:** no top-level tray CLI; optional capability **under Loft** when OS supports it                                                                                               |
-| 8   | Edition / MSRV / toolchain       | Open — pin nightly in `rust-toolchain.toml` if ftui 0.7 requires it                                                                                                                     |
-| 9   | Single crate vs workspace        | Prefer single crate; revisit only if ftui graph forces it                                                                                                                               |
-| 10  | Loft tray test seam              | **PM-lockable:** prefer **no** new top-level CLI arg; if a flag is needed for tests only, keep it optional under `loft` and document — default is Loft-owned auto when OS supports tray |
-| 11  | Merge                            | **LOCKED process:** await MC manual Croft+Loft confirm; do not ask merge until YES; never push                                                                                          |
+| #   | Topic                            | Status / proposal                                                                                                                                                          |
+| --- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | FrankenTUI dependency strategy   | **LOCKED (REVISE):** crates.io **0.7.x** (`ftui`, `ftui-runtime`, `ftui-tty`, `ftui-web`); nightly if required                                                             |
+| 2   | Async runtime                    | Open — tokio everywhere vs sync core + async at UI edges                                                                                                                   |
+| 3   | Metadata backend for scaffolding | **LOCKED (scaffolding):** in-memory concurrent + optional file dump                                                                                                        |
+| 4   | Config schema v0 fields          | Open — minimal `{ data_dir, log_level, ui: { default_mode } }`                                                                                                             |
+| 5   | CLI shape                        | **LOCKED:** subcommands `mcload croft` / `mcload loft` only; **no** `mcload tray`; loft flags: `--no-tray`, `--verbose`                                                    |
+| 6   | Dry-run / test seam              | **LOCKED:** `--dry-run` remains; **not** sole UI acceptance                                                                                                                |
+| 7   | Tray                             | **LOCKED:** no top-level tray CLI; Loft **MUST** tray+BG on tray-capable OS (Windows host required); `--no-tray` for no-tray OS / WSL / CI                                 |
+| 8   | Edition / MSRV / toolchain       | Open — pin nightly in `rust-toolchain.toml` if ftui 0.7 requires it                                                                                                        |
+| 9   | Single crate vs workspace        | Prefer single crate; revisit only if ftui graph forces it                                                                                                                  |
+| 10  | Croft/Loft UX parity             | **LOCKED:** same FrankenTUI `Model`/`App`; only display name + TTY vs Web differ; min = border + press-`q` text                                                            |
+| 11  | Quit path                        | **LOCKED:** `q` exits both; Loft `q` stops Web host (exit 0); Ctrl+C is extra interrupt only                                                                               |
+| 12  | Merge                            | **LOCKED process:** await MC manual Croft+Loft confirm against hardened DoD; do not ask merge until YES; never push                                                        |
 
 ---
 
@@ -317,19 +341,34 @@ Unchanged matrix notes in README (Win / Linux x86_64 / macOS aarch64). Scaffoldi
 
 - [x] LF: `.gitattributes` + local eol config applied; normalize commit on `epic/scaffolding`
 - [x] No top-level `tray` in clap/help/tests/docs; `src/tray.rs` / standalone tray feature launch path gone
-- [x] `mcload croft` starts FrankenTUI TTY UI (or clear actionable error only if env cannot)
-- [x] `mcload loft` starts FrankenTUI Web UI; tray (if any) is Loft-owned optional capability
-- [x] Startup contract tests green; dry-run-only is **not** the merge bar
-- [x] README + plans + prompt-history align with Croft+Loft-only CLI and real startup *(Wave D / this pass)*
-- [ ] MC manually confirms Croft + Loft start → then (and only then) merge may be requested
+- [x] **Parity:** Croft and Loft run the **same** FrankenTUI `Model`/`App` (only `"Croft"`/`"Loft"` name + TTY/Web backend differ); minimum bordered viewport + press-`q`-to-quit text
+- [x] **Quit:** `q` exits Croft process; `q` stops Loft Web host / daemon (process exit 0). Ctrl+C is not the primary documented quit path
+- [x] **Tray:** default `mcload loft` on Windows / macOS shows tray icon + stays in background; quiet unless `--verbose`; `--no-tray` / no-tray OS → foreground web server *(MC Windows icon check pending)*
+- [x] Startup / parity / quit contract tests green; dry-run-only is **not** the merge bar
+- [x] README + plans + prompt-history align with parity, `q` quit, and Loft tray MUST *(Wave D — largely done; final after MC YES)*
+- [ ] MC manually confirms Croft + Loft against this DoD → then (and only then) merge may be requested
 - [x] **Never push**
+
+### Explicit FAIL criteria (Wave C / merge)
+
+| FAIL if…                                              | Why                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| Static HTML-only Loft (no shared FrankenTUI Model/App) | No UX parity with Croft                                      |
+| Croft/Loft UX differ beyond name + render backend      | Violates same-Model/App rule                                 |
+| Ctrl+C-only quit for Loft                              | `q` MUST stop the Web host (exit 0)                          |
+| `q` only hides a window / does not exit Loft process   | Daemon must terminate                                        |
+| No tray icon on native Windows for default `loft`      | Tray under Loft is MUST on Windows host                      |
+| `loft --tray` required, or top-level `tray` mode       | Tray is default-on under Loft; not a CLI mode                |
+| Tray / quit / parity deferred to epic 0005             | Hardened 0001 DoD owns these                                 |
+| Dry-run-only treated as UI acceptance                  | Seam only                                                    |
 
 ---
 
 ## Agent notes (for implementers)
 
 - Prefer small diffs; do not invent dedup algorithms in this epic.
-- Keep Croft/Loft behind a thin launch surface; polish stays epic 0006.
+- Keep Croft/Loft behind a thin launch surface sharing one Model/App; polish beyond border+quit stays epic 0006.
+- Tray icon + BG under Loft is **0001 MUST** on tray-capable OS — do not park in 0005.
 - Schedule code work via [0001-revise-workload-split.md](./0001-revise-workload-split.md); historical [0001-workload-split.md](./0001-workload-split.md) is audit-only for Waves A–E.
 - Update `docs/plans/MASTER.md` when REVISE status or merge gate changes.
 - Collapsible README sections use HTML `<details><summary>…</summary>…</details>`.

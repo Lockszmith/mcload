@@ -11,25 +11,26 @@ const BACKEND_ID: &str = "frankentui-tty";
 /// Non-blocking startup probe for tests / `MCLOAD_STARTUP_PROBE=1`.
 ///
 /// Validates FrankenTUI TTY backend availability without requiring an
-/// interactive session (CI stdout is often not a TTY). Constructs a headless
-/// `ftui_tty::TtyBackend` and an `App` builder — does not enter the event loop.
+/// interactive session (CI stdout is often not a TTY). Does not enter the
+/// event loop.
 pub fn probe_startup() -> Result<StartupReport> {
-    // Confirm the compiled default backend is a real terminal backend.
     let compiled = ftui::DEFAULT_BACKEND;
     if compiled == "none" {
         return Err(Error::Ui(
-            "FrankenTUI compiled without a TTY backend (enable ftui native-backend)"
+            "FrankenTUI compiled without a TTY backend (enable ftui native-backend or crossterm)"
                 .to_string(),
         ));
     }
 
-    // Headless backend construction — no raw mode, no terminal I/O.
-    let backend = ftui_tty::TtyBackend::new(80, 24);
-    if backend.is_live() {
-        // Headless `new` must not enter raw mode; if it did, something is wrong.
-        return Err(Error::Ui(
-            "expected headless TtyBackend::new to be non-live".to_string(),
-        ));
+    // Unix: headless ftui-tty backend (no raw mode). Windows uses crossterm via ftui.
+    #[cfg(unix)]
+    {
+        let backend = ftui_tty::TtyBackend::new(80, 24);
+        if backend.is_live() {
+            return Err(Error::Ui(
+                "expected headless TtyBackend::new to be non-live".to_string(),
+            ));
+        }
     }
 
     // Prove Model + App builder wire up against the runtime (no `.run()`).
@@ -39,7 +40,7 @@ pub fn probe_startup() -> Result<StartupReport> {
         backend: BACKEND_ID.to_string(),
         ready: true,
         detail: Some(format!(
-            "ftui DEFAULT_BACKEND={compiled}; headless TtyBackend available"
+            "ftui DEFAULT_BACKEND={compiled}; headless Croft probe ok"
         )),
     })
 }

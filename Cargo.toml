@@ -29,10 +29,17 @@ directories = "6"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time"] }
-# FrankenTUI 0.7.x — facade (native TTY backend) + explicit tty/web hosts.
-ftui = { version = "0.7", default-features = true }
-ftui-tty = "0.7"
-ftui-web = "0.7"
+# FrankenTUI via third_party/frankentui git submodule (path deps).
+ftui = { path = "third_party/frankentui/crates/ftui", default-features = true }
+ftui-web = { path = "third_party/frankentui/crates/ftui-web" }
+
+[target.'cfg(unix)'.dependencies]
+ftui-tty = { path = "third_party/frankentui/crates/ftui-tty" }
+
+# Tray under Loft (MUST on Windows / macOS). Not a CLI mode.
+[target.'cfg(any(windows, target_os = "macos"))'.dependencies]
+tray-icon = "0.25"
+tao = "0.30"
 
 [dev-dependencies]
 assert_cmd = "2"

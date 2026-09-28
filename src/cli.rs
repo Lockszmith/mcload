@@ -2,6 +2,8 @@
 
 use clap::{Parser, Subcommand};
 
+use crate::ui::loft::LoftOptions;
+
 /// Top-level CLI for the `mcload` binary.
 #[derive(Debug, Clone, Parser, PartialEq, Eq)]
 #[command(name = "mcload", version, about = "McLoad — There can be only one!")]
@@ -29,10 +31,16 @@ pub enum Command {
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },
-    /// Loft — FrankenTUI Web UI
+    /// Loft — FrankenTUI Web UI (tray+BG on tray-capable OS)
     Loft {
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+        /// Force foreground web server (WSL / headless CI / no-tray OS).
+        #[arg(long, default_value_t = false)]
+        no_tray: bool,
+        /// Allow CLI stdout/stderr (default tray loft is quiet).
+        #[arg(long, default_value_t = false)]
+        verbose: bool,
     },
 }
 
@@ -63,8 +71,18 @@ pub fn select_mode(args: &Args) -> Option<LaunchMode> {
 /// Whether the selected mode was invoked with `--dry-run`.
 pub fn dry_run(args: &Args) -> bool {
     match args.command {
-        Some(Command::Croft { dry_run }) | Some(Command::Loft { dry_run }) => dry_run,
+        Some(Command::Croft { dry_run, .. }) | Some(Command::Loft { dry_run, .. }) => dry_run,
         None => false,
+    }
+}
+
+/// Loft-only flags (`--no-tray` / `--verbose`); default when not loft.
+pub fn loft_options(args: &Args) -> LoftOptions {
+    match args.command {
+        Some(Command::Loft {
+            no_tray, verbose, ..
+        }) => LoftOptions { no_tray, verbose },
+        _ => LoftOptions::default(),
     }
 }
 
@@ -72,12 +90,12 @@ pub fn dry_run(args: &Args) -> bool {
 ///
 /// Dry-run returns `Ok` without opening UI (test seam only — not merge acceptance).
 /// Non-dry-run forwards to Croft / Loft entrypoints.
-pub fn dispatch(mode: LaunchMode, dry_run: bool) -> crate::error::Result<()> {
+pub fn dispatch(mode: LaunchMode, dry_run: bool, loft_opts: LoftOptions) -> crate::error::Result<()> {
     if dry_run {
         return Ok(());
     }
     match mode {
         LaunchMode::Croft => crate::ui::croft::run(false),
-        LaunchMode::Loft => crate::ui::loft::run(false),
+        LaunchMode::Loft => crate::ui::loft::run(false, loft_opts),
     }
 }
