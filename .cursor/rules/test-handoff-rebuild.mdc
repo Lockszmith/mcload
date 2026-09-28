@@ -1,0 +1,30 @@
+---
+description: Rebuild all release targets before presenting results for MC testing
+alwaysApply: true
+---
+
+# Test handoff — rebuild all targets first
+
+When presenting results for the user (MC) to **manually test**, smoke, or approve (including Croft/Loft startup, merge gates, or “try this” command blocks):
+
+1. **First** run the multi-target release rebuild from the repo root:
+   - Linux / WSL / devcontainer: `scripts/build-release-multi.sh`
+   - Windows (PowerShell): `pwsh -File scripts/build-release-multi.ps1`
+2. Wait for the script to finish and report the summary (`ok` / `failed` / `skipped`).
+3. **Only then** present paste-ready test commands or ask for confirmation.
+4. If a target was **FAIL**, do not hand off as ready; fix or explain before asking MC to test.
+5. **SKIP** (e.g. macOS from Linux without a cross toolchain) is allowed on this host — call it out explicitly in the handoff. Do not pretend that target was rebuilt.
+6. A host-only `cargo build` / `cargo build --release` does **not** satisfy this rule when `scripts/build-release-multi.*` exists.
+
+## Required form
+
+```text
+1. scripts/build-release-multi.sh   # (or .ps1) — completes
+2. Present artifacts + test commands
+```
+
+## Forbidden form
+
+```text
+Present "please test croft/loft" after only `cargo run` / host-only build
+```

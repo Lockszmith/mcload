@@ -26,7 +26,6 @@ cargo run -- --version
 | `mcload loft --no-tray`    | Loft foreground web server (WSL / headless CI; OS without tray); press `q` to stop     |
 | `mcload loft --no-browser` | Do not open the default browser on launch (tray still has **Open in Browser**)         |
 | `mcload loft --verbose`    | Loft with extra stdout/stderr logs                                                     |
-| `… --dry-run`              | Test seam only: exit 0 without opening UI (not merge / UI acceptance)                  |
 | `--config <path>`          | Override config YAML path (global)                                                     |
 | `--project <dir>`          | Per-project config directory (global)                                                  |
 | `--log-level <level>`      | Override log level from CLI (global)                                                   |
